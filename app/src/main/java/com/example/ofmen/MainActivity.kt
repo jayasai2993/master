@@ -26,6 +26,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             OFMENTheme {
+                //Checking for MR
                 SplashScreen()
             }
         }
