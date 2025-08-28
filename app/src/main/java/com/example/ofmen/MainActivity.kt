@@ -119,7 +119,7 @@ fun SplashScreen() {
             )
 
             // Shimmer underline effect (masculine bold detail)
-            Spacer(modifier = Modifier.height(5.dp))
+            Spacer(modifier = Modifier.height(6.dp))
             Box(
                 modifier = Modifier
                     .height(4.dp)
