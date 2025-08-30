@@ -1,0 +1,52 @@
+package com.example.ofmen.screens
+
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Scaffold
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
+import com.example.ofmen.DataStoreManager
+
+
+@Composable
+fun MainScreen(){
+        val navController = rememberNavController()
+        val navBackStackEntry by navController.currentBackStackEntryAsState()
+        val context = LocalContext.current
+        val dataStoreManager = DataStoreManager(context)
+        val isLoggedIn by dataStoreManager.isLoggedInFlow.collectAsState(initial = false)
+        val currentRoute = navBackStackEntry?.destination?.route
+        Scaffold(
+            topBar = {
+                if (currentRoute == "home") {
+                    HomeTopBar()
+                }
+            },
+            bottomBar = {
+                if (currentRoute in listOf("home", "community", "post", "tasks", "profile")) {
+                    BottomNavBar(navController)
+                }
+            }
+        ) { innerPadding ->
+            NavHost(
+                navController = navController,
+                startDestination = if (isLoggedIn) "home" else "login",
+                modifier = Modifier.padding(innerPadding)
+            ) {
+                composable("home") { HomeScreen() }
+                composable("community") { CommunityScreen(navController) }
+                composable("post") { NewPostScreen() }
+                composable("tasks") { TaskScreen() }
+                composable("profile") { ProfileScreen(navController, dataStoreManager) }
+                composable("join") { JoinScreen() }
+                composable("login") { LoginScreen(navController, dataStoreManager) }
+                composable("signup") { SignupScreen(navController) }
+            }
+        }
+}

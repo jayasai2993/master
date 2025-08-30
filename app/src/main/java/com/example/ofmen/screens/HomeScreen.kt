@@ -12,8 +12,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -23,6 +21,8 @@ import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.currentBackStackEntryAsState
 
 
 // Load your Bebas Neue font
@@ -35,14 +35,9 @@ val SubTextColor = Color.Gray
 
 @Composable
 fun HomeScreen() {
-    Scaffold(
-        topBar = { HomeTopBar() },
-        bottomBar = { BottomNavBar() }
-    ) { padding ->
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
                 .background(MaterialTheme.colorScheme.background)
         ) {
             items(dummyPosts) { post ->
@@ -50,7 +45,6 @@ fun HomeScreen() {
             }
         }
     }
-}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -138,46 +132,59 @@ fun PostCard(post: Post) {
         }
     }
 }
-
 @Composable
-fun BottomNavBar() {
+fun BottomNavBar(navController: NavHostController) {
+    val items = listOf(
+        Screen.Home,
+        Screen.Community,
+        Screen.Post,
+        Screen.Tasks,
+        Screen.Profile
+    )
+
     NavigationBar {
-        var selectedItem = remember{mutableStateOf(0)}
-        NavigationBarItem(
-            selected= selectedItem.value == 0,
-            onClick = { selectedItem.value=0},
-            icon = { Icon(Icons.Default.Home, contentDescription = "Home") }
-        )
-        NavigationBarItem(
-            selected = selectedItem.value == 1,
-            onClick = { selectedItem.value=1},
-            icon = { Icon(painter = painterResource(R.drawable.groups_svgrepo_com), contentDescription = "Search" ,modifier = Modifier.size(32.dp))}
-        )
-        NavigationBarItem(
-            selected = selectedItem.value == 2,
-            onClick = { selectedItem.value=2},
-            icon = { Icon(Icons.Default.Add, contentDescription = "Add Post") }
-        )
-        NavigationBarItem(
-            selected = selectedItem.value==3,
-            onClick = { selectedItem.value=3},
-            icon = { Icon(painter= painterResource(R.drawable.task_svgrepo_com), contentDescription = "Notifications",modifier = Modifier.size(26.dp)) }
-        )
-        NavigationBarItem(
-            selected = selectedItem.value==4,
-            onClick = { selectedItem.value=4},
-            icon = {
-                Image(
-                    painter = painterResource(id = R.drawable.user1),
-                    contentDescription = "Profile",
-                    modifier = Modifier
-                        .size(28.dp)
-                        .clip(CircleShape)
-                )
-            }
-        )
+        val navBackStackEntry = navController.currentBackStackEntryAsState()
+        val currentRoute = navBackStackEntry.value?.destination?.route
+
+        items.forEach { screen ->
+            NavigationBarItem(
+                selected = currentRoute == screen.route,
+                onClick = {
+                    navController.navigate(screen.route) {
+                        popUpTo(navController.graph.startDestinationId) { saveState = true }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                },
+                icon = {
+                    when (screen) {
+                        Screen.Home -> Icon(Icons.Default.Home, contentDescription = "Home")
+                        Screen.Community -> Icon(
+                            painter = painterResource(R.drawable.groups_svgrepo_com),
+                            contentDescription = "Groups",
+                            modifier = Modifier.size(26.dp)
+                        )
+                        Screen.Post -> Icon(Icons.Default.Add, contentDescription = "Add Post")
+                        Screen.Tasks -> Icon(
+                            painter = painterResource(R.drawable.task_svgrepo_com),
+                            contentDescription = "Tasks",
+                            modifier = Modifier.size(26.dp)
+                        )
+                        Screen.Profile -> Image(
+                            painter = painterResource(R.drawable.user1),
+                            contentDescription = "Profile",
+                            modifier = Modifier
+                                .size(28.dp)
+                                .clip(CircleShape)
+                        )
+                        else -> {}
+                    }
+                }
+            )
+        }
     }
 }
+
 
 // Dummy data model
 data class Post(
@@ -193,10 +200,10 @@ data class Post(
 
 // Dummy post list
 val dummyPosts = listOf(
-    Post("Helena", "Group name", "3 min ago", R.drawable.user1, R.drawable.post1, "Post description", 21, 4),
-    Post("Daniel", "Group Name", "2 hrs ago", R.drawable.user2, R.drawable.post2, "Body text for a post. Since it’s a social app, sometimes it’s a hot take, and sometimes it’s a question.", 6, 18),
-    Post("Helena", "Group name", "3 min ago", R.drawable.user1, R.drawable.post1, "Post description", 21, 4),
-    Post("Daniel", "Group Name", "2 hrs ago", R.drawable.user2, R.drawable.post2, "Body text for a post. Since it’s a social app, sometimes it’s a hot take, and sometimes it’s a question.", 6, 18),
-    Post("Helena", "Group name", "3 min ago", R.drawable.user1, R.drawable.post1, "Post description", 21, 4),
-    Post("Daniel", "Group Name", "2 hrs ago", R.drawable.user2, R.drawable.post2, "Body text for a post. Since it’s a social app, sometimes it’s a hot take, and sometimes it’s a question.", 6, 18)
+    Post("Tyler Durden", "", "3 min ago", R.drawable.user1, R.drawable.post1, "We are Consumers", 21, 4),
+    Post("Daniel", "", "2 hrs ago", R.drawable.user2, R.drawable.post2, "The First Rule is :- ", 6, 18),
+    Post("Fight Club", "", "3 min ago", R.drawable.user3, R.drawable.post3, "Gentlemen Welcome to Fight Club", 21, 4),
+    Post("Marla", "", "2 hrs ago", R.drawable.user1, R.drawable.post4, "What are you Thinking about Life?", 6, 18),
+    Post("Be a Man", "", "3 min ago", R.drawable.user2, R.drawable.post5, "You have to Fight", 21, 4),
+    Post("Rocky", "", "2 hrs ago", R.drawable.user3, R.drawable.post6, "What the Hell is going on here!", 6, 18)
 )
