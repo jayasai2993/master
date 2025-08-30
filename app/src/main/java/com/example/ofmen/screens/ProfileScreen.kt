@@ -53,7 +53,7 @@ fun ProfileScreen(navController: NavController,dataStoreManager: DataStoreManage
         Button(onClick = {
             Firebase.auth.signOut()
             CoroutineScope(Dispatchers.IO).launch {
-                dataStoreManager.setLoggedIn(true)
+                dataStoreManager.setLoggedIn(false)
             }
             navController.navigate("login"){
                 popUpTo("profile"){inclusive = true}
