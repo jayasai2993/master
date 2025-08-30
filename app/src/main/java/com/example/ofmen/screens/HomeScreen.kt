@@ -1,37 +1,35 @@
 package com.example.ofmen.screens
 
-import androidx.compose.ui.graphics.Color
-import com.example.ofmen.R
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
+import com.example.ofmen.R
 
-
-// Load your Bebas Neue font
+// Load Bebas Neue font
 val bebasNeue = FontFamily(Font(R.font.bebas_neue_regular))
-
-// Your brand colors (replace with your palette)
-val PrimaryColor = Color(0xFF1DA1F2)   // Example blue
-val TextColor = Color.Black
-val SubTextColor = Color.Gray
 
 @Composable
 fun HomeScreen() {
@@ -44,7 +42,7 @@ fun HomeScreen() {
                 PostCard(post)
             }
         }
-    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -55,83 +53,115 @@ fun HomeTopBar() {
                 text = "OFMEN",
                 style = TextStyle(
                     fontFamily = bebasNeue,
-                    fontSize = 20.sp,
-                    color = MaterialTheme.colorScheme.primary
-                ),
-                modifier = Modifier.fillMaxWidth(),
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
             )
         },
         navigationIcon = {
             IconButton(onClick = { }) {
-                Icon(Icons.Default.Menu, contentDescription = "Menu", tint = TextColor)
+                Icon(Icons.Default.Menu, contentDescription = "Menu", tint = MaterialTheme.colorScheme.onBackground)
             }
         },
         actions = {
             IconButton(onClick = { }) {
-                Icon(Icons.Default.Search, contentDescription = "Search", tint = TextColor)
+                Icon(Icons.Default.Search, contentDescription = "Search", tint = MaterialTheme.colorScheme.onBackground)
             }
-        }
+        },
+        colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = MaterialTheme.colorScheme.surface,
+            titleContentColor = MaterialTheme.colorScheme.onSurface
+        )
     )
 }
 
 @Composable
 fun PostCard(post: Post) {
-    Column(
+    Card(
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
         modifier = Modifier
             .fillMaxWidth()
-            .padding(12.dp)
+            .padding(horizontal = 16.dp, vertical = 10.dp)
+            .shadow(8.dp, RoundedCornerShape(16.dp))
     ) {
-        // User Row
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Image(
-                painter = painterResource(id = post.userImage),
-                contentDescription = "User Image",
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Column {
-                Text("${post.userName} in ${post.groupName}", fontSize = 14.sp, fontFamily = bebasNeue)
-                Text(post.timeAgo, fontSize = 12.sp, color = SubTextColor)
+        Column(modifier = Modifier.padding(14.dp)) {
+
+            // User Row
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Image(
+                    painter = painterResource(id = post.userImage),
+                    contentDescription = "User Image",
+                    modifier = Modifier
+                        .size(42.dp)
+                        .clip(CircleShape)
+                )
+                Spacer(modifier = Modifier.width(10.dp))
+                Column {
+                    Text(
+                        text = "${post.userName} ${if (post.groupName.isNotEmpty()) "in ${post.groupName}" else ""}",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = post.timeAgo,
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.outline
+                    )
+                }
+                Spacer(Modifier.weight(1f))
+                Icon(Icons.Default.MoreVert, contentDescription = "More", tint = MaterialTheme.colorScheme.outline)
             }
-            Spacer(Modifier.weight(1f))
-            Icon(Icons.Default.MoreVert, contentDescription = "More")
-        }
 
-        Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
-        // Post Image
-        Image(
-            painter = painterResource(id = post.postImage),
-            contentDescription = "Post Image",
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(200.dp)
-                .clip(MaterialTheme.shapes.medium)
-        )
+            // Post Image
+            Image(
+                painter = painterResource(id = post.postImage),
+                contentDescription = "Post Image",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(220.dp)
+                    .clip(RoundedCornerShape(14.dp))
+            )
 
-        Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
-        // Post Description
-        Text(post.description, fontSize = 14.sp, color = TextColor)
+            // Post Description
+            Text(
+                text = post.description,
+                fontSize = 14.sp,
+                color = MaterialTheme.colorScheme.onSurface,
+                lineHeight = 18.sp
+            )
 
-        Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
-        // Likes & Comments
-        Row {
-            Icon(Icons.Default.FavoriteBorder, contentDescription = "Like")
-            Spacer(modifier = Modifier.width(4.dp))
-            Text("${post.likes} likes", fontSize = 13.sp, color = SubTextColor)
+            // Likes & Comments
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Default.FavoriteBorder, contentDescription = "Like", tint = MaterialTheme.colorScheme.primary)
+                Spacer(modifier = Modifier.width(6.dp))
+                Text("${post.likes} likes", fontSize = 13.sp, color = MaterialTheme.colorScheme.outline)
 
-            Spacer(modifier = Modifier.width(16.dp))
+                Spacer(modifier = Modifier.width(18.dp))
 
-            Icon(painter = painterResource(R.drawable.comment), contentDescription = "Comment", modifier = Modifier.size(20.dp))
-            Spacer(modifier = Modifier.width(4.dp))
-            Text("${post.comments} comments", fontSize = 13.sp, color = SubTextColor)
+                Icon(
+                    painter = painterResource(R.drawable.comment),
+                    contentDescription = "Comment",
+                    modifier = Modifier.size(20.dp),
+                    tint = MaterialTheme.colorScheme.primary
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Text("${post.comments} comments", fontSize = 13.sp, color = MaterialTheme.colorScheme.outline)
+            }
         }
     }
 }
+
 @Composable
 fun BottomNavBar(navController: NavHostController) {
     val items = listOf(
@@ -142,9 +172,12 @@ fun BottomNavBar(navController: NavHostController) {
         Screen.Profile
     )
 
-    NavigationBar {
-        val navBackStackEntry = navController.currentBackStackEntryAsState()
-        val currentRoute = navBackStackEntry.value?.destination?.route
+    NavigationBar(
+        containerColor = MaterialTheme.colorScheme.surface,
+        contentColor = MaterialTheme.colorScheme.onSurface
+    ) {
+        val navBackStackEntry by navController.currentBackStackEntryAsState()
+        val currentRoute = navBackStackEntry?.destination?.route
 
         items.forEach { screen ->
             NavigationBarItem(
@@ -179,12 +212,48 @@ fun BottomNavBar(navController: NavHostController) {
                         )
                         else -> {}
                     }
-                }
+                },
+                label = {
+                    when (screen) {
+                        Screen.Home -> Text(
+                            text = "Home",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        Screen.Community -> Text(
+                            text = "Community",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        Screen.Post -> Text(
+                            text = "Post",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        Screen.Tasks -> Text(
+                            text = "Tasks",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        Screen.Profile -> Text(
+                            text = "Profile",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        else -> {}
+                    }
+                },
+                colors = NavigationBarItemDefaults.colors(
+                    selectedIconColor = MaterialTheme.colorScheme.primary,
+                    selectedTextColor = MaterialTheme.colorScheme.primary,
+                    unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    indicatorColor = MaterialTheme.colorScheme.surfaceVariant
+                )
             )
         }
     }
 }
-
 
 // Dummy data model
 data class Post(

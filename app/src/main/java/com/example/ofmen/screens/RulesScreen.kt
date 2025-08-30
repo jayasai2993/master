@@ -5,82 +5,82 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 
-private val BG = Color(0xFF0B0B0B)
-private val PANEL = Color(0xFF0F0F0F)
-private val ACCENT = Color(0xFFDC2F2F) // crimson-like
-private val MUTED = Color(0xFF9A9A9A)
-private val WHITE = Color(0xFFFFFFFF)
-
-
 @Composable
 fun RulesScreen(
     navController: NavController
 ) {
-
     Surface(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(BG),
-        color = BG
+        modifier = Modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.background
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(20.dp)
+                .padding(20.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
             // Header
             Column(
-                horizontalAlignment = Alignment.Start,
+                horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
-                    text = "🩸 The Brotherhood Oath",
-                    color = ACCENT,
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.ExtraBold
+                    text = "OFMEN",
+                    color = MaterialTheme.colorScheme.primary,
+                    fontSize = 35.sp,
+                    style = MaterialTheme.typography.headlineSmall.copy(
+                        fontWeight = FontWeight.ExtraBold
+                    )
                 )
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(11.dp))
                 Text(
-                    text = "\"You do not join this Brotherhood. You earn it.\"",
-                    color = WHITE,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.SemiBold
+                    text = "\"Only For The Real Men\"",
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.85f),
+                    fontSize = 22.sp,
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        fontWeight = FontWeight.SemiBold
+                    )
                 )
             }
 
-            Spacer(modifier = Modifier.height(18.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
-            // Rules Card / Panel
+            // Rules Panel
             Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(
-                        brush = Brush.verticalGradient(listOf(PANEL, Color(0xFF0E0E0E))),
-                        shape = RoundedCornerShape(12.dp)
+                        brush = Brush.verticalGradient(
+                            listOf(
+                                MaterialTheme.colorScheme.surface,
+                                MaterialTheme.colorScheme.background
+                            )
+                        ),
+                        shape = RoundedCornerShape(16.dp)
                     )
-                    .padding(18.dp)
+                    .padding(20.dp)
             ) {
                 Text(
-                    text = "⚔️ The Rules",
-                    color = ACCENT,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold
+                    text = "The Rules of OFMEN",
+                    color = MaterialTheme.colorScheme.primary,
+                    fontSize = 20.sp,
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.Bold
+                    )
                 )
                 Spacer(modifier = Modifier.height(12.dp))
 
@@ -92,56 +92,41 @@ fun RulesScreen(
                 RuleLine(" Keep It Brotherhood-Only — this space is for real men.")
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
+            // Questions
+            QuestionItem("1) what do you want to be before you die?")
+            Spacer(modifier = Modifier.height(18.dp))
+            QuestionItem("2) What are you doing about it now?")
 
-            // Question 1
-            Text(
-                text = "1) Honestly — what do you want to be before you die?",
-                color = WHITE,
-                fontSize = 13.sp,
-                fontWeight = FontWeight.SemiBold
-            )
-
-
-            Spacer(modifier = Modifier.height(14.dp))
-
-            // Question 2
-            Text(
-                text = "2) What are you doing about it now?",
-                color = WHITE,
-                fontSize = 13.sp,
-                fontWeight = FontWeight.SemiBold
-            )
-
-
-            Spacer(modifier = Modifier.height(26.dp))
+            Spacer(modifier = Modifier.height(30.dp))
 
             // Enter button
             Button(
                 onClick = { navController.navigate("login") },
                 modifier = Modifier
-                    .fillMaxWidth()
+                    .width(180.dp)
                     .height(54.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = ACCENT),
-                shape = RoundedCornerShape(10.dp),
-                enabled = true
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary
+                ),
+                shape = RoundedCornerShape(12.dp)
             ) {
                 Text(
                     text = "Next",
-                    color = WHITE,
-                    fontSize = 16.sp,
+                    color = MaterialTheme.colorScheme.onPrimary,
+                    fontSize = 22.sp,
                     fontWeight = FontWeight.ExtraBold
                 )
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
-            // Footer small text
+            // Footer
             Text(
-                text = "By entering, you accept the Brotherhood rules. This space is for discipline, truth, and growth.",
-                color = MUTED,
-                fontSize = 12.sp,
+                text = "By entering, you accept the Brotherhood rules.\nThis space is for discipline, truth, and growth.",
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                fontSize = 17.sp,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth()
             )
@@ -161,15 +146,26 @@ private fun RuleLine(text: String) {
     ) {
         Text(
             text = "\u2022",
-            color = ACCENT,
+            color = MaterialTheme.colorScheme.primary,
+            fontSize = 17.sp,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.width(18.dp)
         )
         Spacer(modifier = Modifier.width(6.dp))
         Text(
             text = text,
-            color = WHITE,
-            fontSize = 13.sp
+            color = MaterialTheme.colorScheme.onSurface,
+            fontSize = 17.sp
         )
     }
+}
+
+@Composable
+private fun QuestionItem(text: String) {
+    Text(
+        text = text,
+        color = MaterialTheme.colorScheme.onBackground,
+        fontSize = 17.sp,
+        fontWeight = FontWeight.SemiBold
+    )
 }
