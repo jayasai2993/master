@@ -4,15 +4,9 @@ import android.view.animation.OvershootInterpolator
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -25,11 +19,11 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-
+import com.example.ofmen.R
 
 @Composable
 fun SplashScreen() {
@@ -56,25 +50,38 @@ fun SplashScreen() {
         // Slide-up for tagline
         offsetY.animateTo(
             targetValue = 0f,
-            animationSpec = tween(durationMillis = 1000, delayMillis = 600, easing = LinearOutSlowInEasing)
+            animationSpec = tween(
+                durationMillis = 1000,
+                delayMillis = 600,
+                easing = LinearOutSlowInEasing
+            )
         )
     }
 
-    // Background gradient for a masculine, premium feel
+    // Background using theme colors
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(
                 Brush.verticalGradient(
-                    listOf(Color.Black, Color(0xFF0F0C29), Color(0xFFf7971e))
+                    listOf(
+                        MaterialTheme.colorScheme.background,
+                        MaterialTheme.colorScheme.surface,
+                        MaterialTheme.colorScheme.primary
+                    )
                 )
             ),
         contentAlignment = Alignment.Center
     ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            // Main Title
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Image(
+                painter = painterResource(id = R.drawable.user1),
+                contentDescription = "Logo",
+                modifier = Modifier
+                    .width(150.dp)
+                    .height(150.dp)
+            )
+            Spacer(modifier = Modifier.height(16.dp))
             Text(
                 text = "OFMEN",
                 style = MaterialTheme.typography.headlineLarge.copy(
@@ -82,13 +89,12 @@ fun SplashScreen() {
                     fontWeight = FontWeight.ExtraBold,
                     letterSpacing = 4.sp
                 ),
-                color = Color.White,
+                color = MaterialTheme.colorScheme.onBackground,
                 modifier = Modifier
                     .scale(scale.value)
                     .alpha(alpha.value)
             )
 
-            // Shimmer underline effect (masculine bold detail)
             Spacer(modifier = Modifier.height(6.dp))
             Box(
                 modifier = Modifier
@@ -97,19 +103,22 @@ fun SplashScreen() {
                     .clip(RoundedCornerShape(50))
                     .background(
                         Brush.linearGradient(
-                            listOf(Color.White, Color(0xFF9C27B0), Color(0xFF3F51B5))
+                            listOf(
+                                MaterialTheme.colorScheme.onBackground,
+                                MaterialTheme.colorScheme.primary,
+                                MaterialTheme.colorScheme.secondary
+                            )
                         )
                     )
             )
 
-            // Tagline with smooth slide-up
             Text(
                 text = "Only For the Real Men",
                 style = MaterialTheme.typography.bodyLarge.copy(
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Medium
                 ),
-                color = Color(0xFFB0BEC5),
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
                 modifier = Modifier
                     .padding(top = 20.dp)
                     .alpha(alpha.value)

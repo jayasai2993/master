@@ -2,17 +2,18 @@ package com.example.ofmen.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-val Purple80 = Color(0xFFD0BCFF)
-val PurpleGrey80 = Color(0xFFCCC2DC)
-val Pink80 = Color(0xFFEFB8C8)
 
-val Purple40 = Color(0xFF6650a4)
-val PurpleGrey40 = Color(0xFF625b71)
-val Pink40 = Color(0xFF7D5260)
+// Brand & Accent Colors
+val RedPrimary = Color(0xFFFF0000)   // Bright red for buttons, highlights
 
-val Amber = Color(0xFFB45309)
-val VeryDarkGrey = Color(0xFF0A0A0A)
-val DarkGrey = Color(0xFF1A1A1A)
-val MediumGrey = Color(0xFF404040)
-val OffWhite = Color(0xFFD4D4D4)
-val Black = Color(0xFF000000)
+// Dark Mode Colors
+val BlackBackground = Color(0xFF101010) // App background
+val DarkSurface = Color(0xFF1C1C1C)     // Cards, text fields
+val DarkTextPrimary = Color(0xFFFFFFFF) // Main text/icons
+val DarkTextSecondary = Color(0xFFB0B0B0) // Secondary/hint text
+
+// Light Mode Colors
+val WhiteBackground = Color(0xFFFFFFFF) // App background
+val LightSurface = Color(0xFFF5F5F5)    // Cards, text fields
+val LightTextPrimary = Color(0xFF000000) // Main text/icons
+val LightTextSecondary = Color(0xFF666666) // Secondary/hint text

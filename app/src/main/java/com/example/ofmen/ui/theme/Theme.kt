@@ -1,6 +1,6 @@
 package com.example.ofmen.ui.theme
 
-import android.app.Activity
+
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
@@ -9,39 +9,35 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 
 private val DarkColorScheme = darkColorScheme(
-    primary = Amber,
-    onPrimary = OffWhite,
-    background = VeryDarkGrey,
-    onBackground = OffWhite,
-    surface = DarkGrey,
-    onSurface = OffWhite,
-    secondary = MediumGrey,
-    tertiary = Amber,
-    error = Color(0xFFCF6679)
+    primary = RedPrimary,
+    onPrimary = DarkTextPrimary,
+    background = BlackBackground,
+    onBackground = DarkTextPrimary,
+    surface = DarkSurface,
+    onSurface = DarkTextPrimary,
+    secondary = DarkTextSecondary,
+    onSecondary = DarkTextPrimary
 )
 
-// Light Theme Color Scheme
 private val LightColorScheme = lightColorScheme(
-    primary = Amber,
-    onPrimary = OffWhite,
-    background = OffWhite,
-    onBackground = Black,
-    surface = Color(0xFFEEEEEE),
-    onSurface = Black,
-    secondary = Color(0xFF616161),
-    tertiary = Amber,
-    error = Color(0xFFB00020)
+    primary = RedPrimary,
+    onPrimary = WhiteBackground,
+    background = WhiteBackground,
+    onBackground = LightTextPrimary,
+    surface = LightSurface,
+    onSurface = LightTextPrimary,
+    secondary = LightTextSecondary,
+    onSecondary = LightTextPrimary
 )
 
 @Composable
 fun OFMENTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     // Dynamic color is available on Android 12+
-    dynamicColor: Boolean = true,
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {

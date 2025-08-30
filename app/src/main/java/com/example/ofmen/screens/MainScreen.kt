@@ -22,6 +22,7 @@ fun MainScreen(){
         val dataStoreManager = DataStoreManager(context)
         val isLoggedIn by dataStoreManager.isLoggedInFlow.collectAsState(initial = false)
         val currentRoute = navBackStackEntry?.destination?.route
+
         Scaffold(
             topBar = {
                 if (currentRoute == "home") {
@@ -36,7 +37,7 @@ fun MainScreen(){
         ) { innerPadding ->
             NavHost(
                 navController = navController,
-                startDestination = if (isLoggedIn) "home" else "login",
+                startDestination = if (isLoggedIn) "home" else "rules",
                 modifier = Modifier.padding(innerPadding)
             ) {
                 composable("home") { HomeScreen() }
@@ -47,6 +48,7 @@ fun MainScreen(){
                 composable("join") { JoinScreen() }
                 composable("login") { LoginScreen(navController, dataStoreManager) }
                 composable("signup") { SignupScreen(navController) }
+                composable("rules") { RulesScreen(navController) }
             }
         }
 }
