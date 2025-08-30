@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "571672777464",
+    "project_id": "ofmen1",
+    "storage_bucket": "ofmen1.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:571672777464:android:904160dacc1741f969e10d",
+        "android_client_info": {
+          "package_name": "com.example.ofmen"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCDXAELac6KAVzwplYJH7cVV89woi1gJgg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
