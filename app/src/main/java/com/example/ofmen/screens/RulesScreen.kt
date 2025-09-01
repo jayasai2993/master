@@ -41,6 +41,7 @@ fun RulesScreen(
                     text = "OFMEN",
                     color = MaterialTheme.colorScheme.primary,
                     fontSize = 35.sp,
+                    fontFamily = bebasNeue,
                     style = MaterialTheme.typography.headlineSmall.copy(
                         fontWeight = FontWeight.ExtraBold
                     )
@@ -50,6 +51,7 @@ fun RulesScreen(
                     text = "\"Only For The Real Men\"",
                     color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.85f),
                     fontSize = 22.sp,
+                    fontFamily = bebasNeue,
                     style = MaterialTheme.typography.bodyMedium.copy(
                         fontWeight = FontWeight.SemiBold
                     )
@@ -115,7 +117,8 @@ fun RulesScreen(
                 Text(
                     text = "Next",
                     color = MaterialTheme.colorScheme.onPrimary,
-                    fontSize = 22.sp,
+                    fontFamily = bebasNeue,
+                    fontSize = 24.sp,
                     fontWeight = FontWeight.ExtraBold
                 )
             }

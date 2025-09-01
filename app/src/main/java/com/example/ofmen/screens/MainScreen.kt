@@ -7,11 +7,13 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.ofmen.DataStoreManager
+import com.example.ofmen.viewmodel.ProfileViewModel
 
 
 @Composable
@@ -44,7 +46,8 @@ fun MainScreen(){
                 composable("community") { CommunityScreen(navController) }
                 composable("post") { NewPostScreen() }
                 composable("tasks") { TaskScreen() }
-                composable("profile") { ProfileScreen(navController, dataStoreManager) }
+                composable("profile") { val profileViewModel: ProfileViewModel = viewModel()
+                    ProfileScreen( dataStoreManager, navController, viewModel = profileViewModel) }
                 composable("join") { JoinScreen() }
                 composable("login") { LoginScreen(navController, dataStoreManager) }
                 composable("signup") { SignupScreen(navController) }
