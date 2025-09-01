@@ -64,5 +64,12 @@ dependencies {
     // DataStore Preferences
     implementation ("androidx.datastore:datastore-preferences:1.1.1")
     implementation ("androidx.datastore:datastore-preferences-core:1.1.1")
+    // Firestore
+    implementation("com.google.firebase:firebase-firestore-ktx:25.0.0")
+
+// Storage
+    implementation("com.google.firebase:firebase-storage-ktx:21.0.0")
+
+    implementation("io.coil-kt:coil-compose:2.6.0")
 
 }

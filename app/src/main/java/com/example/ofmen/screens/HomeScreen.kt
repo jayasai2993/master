@@ -156,7 +156,7 @@ fun PostCard(post: Post) {
                     tint = MaterialTheme.colorScheme.primary
                 )
                 Spacer(modifier = Modifier.width(6.dp))
-                Text("${post.comments} comments", fontSize = 13.sp, color = MaterialTheme.colorScheme.outline)
+                Text("${post.comments} comments",fontSize = 13.sp, color = MaterialTheme.colorScheme.outline)
             }
         }
     }
@@ -210,37 +210,40 @@ fun BottomNavBar(navController: NavHostController) {
                                 .size(28.dp)
                                 .clip(CircleShape)
                         )
-                        else -> {}
                     }
                 },
                 label = {
                     when (screen) {
                         Screen.Home -> Text(
                             text = "Home",
+                            fontFamily = bebasNeue,
                             fontSize = 11.sp,
                             fontWeight = FontWeight.SemiBold
                         )
                         Screen.Community -> Text(
                             text = "Community",
+                            fontFamily = bebasNeue,
                             fontSize = 11.sp,
                             fontWeight = FontWeight.SemiBold
                         )
                         Screen.Post -> Text(
                             text = "Post",
+                            fontFamily = bebasNeue,
                             fontSize = 11.sp,
                             fontWeight = FontWeight.SemiBold
                         )
                         Screen.Tasks -> Text(
                             text = "Tasks",
+                            fontFamily = bebasNeue,
                             fontSize = 11.sp,
                             fontWeight = FontWeight.SemiBold
                         )
                         Screen.Profile -> Text(
                             text = "Profile",
+                            fontFamily = bebasNeue,
                             fontSize = 11.sp,
                             fontWeight = FontWeight.SemiBold
                         )
-                        else -> {}
                     }
                 },
                 colors = NavigationBarItemDefaults.colors(

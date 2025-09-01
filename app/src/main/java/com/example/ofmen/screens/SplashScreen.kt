@@ -86,6 +86,7 @@ fun SplashScreen() {
                 text = "OFMEN",
                 style = MaterialTheme.typography.headlineLarge.copy(
                     fontSize = 54.sp,
+                    fontFamily = bebasNeue,
                     fontWeight = FontWeight.ExtraBold,
                     letterSpacing = 4.sp
                 ),
@@ -116,6 +117,7 @@ fun SplashScreen() {
                 text = "Only For the Real Men",
                 style = MaterialTheme.typography.bodyLarge.copy(
                     fontSize = 20.sp,
+                    fontFamily = bebasNeue,
                     fontWeight = FontWeight.Medium
                 ),
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
