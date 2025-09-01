@@ -72,4 +72,13 @@ dependencies {
 
     implementation("io.coil-kt:coil-compose:2.6.0")
 
+    // Coroutines
+    implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
+
+// OkHttp (HTTP + multipart)
+    implementation ("com.squareup.okhttp3:okhttp:4.11.0")
+
+// JSON parsing
+    implementation ("org.json:json:20230227")
+
 }

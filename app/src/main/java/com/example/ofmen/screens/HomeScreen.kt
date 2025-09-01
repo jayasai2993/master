@@ -11,6 +11,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -26,20 +28,35 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
+import coil.compose.rememberAsyncImagePainter
 import com.example.ofmen.R
+import com.example.ofmen.viewmodel.FeedPost
+import com.example.ofmen.viewmodel.FeedViewModel
+import com.google.firebase.auth.FirebaseAuth
+import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
 
 // Load Bebas Neue font
 val bebasNeue = FontFamily(Font(R.font.bebas_neue_regular))
 
 @Composable
-fun HomeScreen() {
+fun HomeScreen(viewModel: FeedViewModel = viewModel()) {
+    val posts by viewModel.feedPosts.collectAsState()
+
+    LaunchedEffect(Unit) {
+        viewModel.loadFeed()
+    }
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background)
         ) {
-            items(dummyPosts) { post ->
-                PostCard(post)
+            items(posts) { post ->
+                PostCard(
+                    post = post,
+                    onLikeClick = { viewModel.toggleLike(post) },
+                    onCommentClick = { viewModel.addComment(post.id, "Nice!") }
+                )
             }
         }
 }
@@ -77,86 +94,73 @@ fun HomeTopBar() {
 }
 
 @Composable
-fun PostCard(post: Post) {
+fun PostCard(
+    post: FeedPost,
+    onLikeClick: () -> Unit,
+    onCommentClick: () -> Unit
+) {
     Card(
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 10.dp)
-            .shadow(8.dp, RoundedCornerShape(16.dp))
+        modifier = Modifier.fillMaxWidth().padding(10.dp)
     ) {
-        Column(modifier = Modifier.padding(14.dp)) {
-
-            // User Row
+        Column(Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Image(
-                    painter = painterResource(id = post.userImage),
-                    contentDescription = "User Image",
-                    modifier = Modifier
-                        .size(42.dp)
-                        .clip(CircleShape)
-                )
-                Spacer(modifier = Modifier.width(10.dp))
-                Column {
-                    Text(
-                        text = "${post.userName} ${if (post.groupName.isNotEmpty()) "in ${post.groupName}" else ""}",
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
+                if (post.profileImageUrl.isNotEmpty()) {
+                    AsyncImage(
+                        model = post.profileImageUrl,
+                        contentDescription = "Profile image",
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(CircleShape)
                     )
-                    Text(
-                        text = post.timeAgo,
-                        fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.outline
-                    )
+                } else {
+                    // fallback placeholder - use a drawable or initials
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(post.username.firstOrNull()?.toString() ?: "U")
+                    }
                 }
-                Spacer(Modifier.weight(1f))
-                Icon(Icons.Default.MoreVert, contentDescription = "More", tint = MaterialTheme.colorScheme.outline)
+
+                Spacer(modifier = Modifier.width(8.dp))
+
+                Column {
+                    Text(post.username, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+                    Text(timeAgo(post.createdAt),style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+                }
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
-
-            // Post Image
-            Image(
-                painter = painterResource(id = post.postImage),
-                contentDescription = "Post Image",
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(220.dp)
-                    .clip(RoundedCornerShape(14.dp))
-            )
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            // Post Description
-            Text(
-                text = post.description,
-                fontSize = 14.sp,
-                color = MaterialTheme.colorScheme.onSurface,
-                lineHeight = 18.sp
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Likes & Comments
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Default.FavoriteBorder, contentDescription = "Like", tint = MaterialTheme.colorScheme.primary)
-                Spacer(modifier = Modifier.width(6.dp))
-                Text("${post.likes} likes", fontSize = 13.sp, color = MaterialTheme.colorScheme.outline)
-
-                Spacer(modifier = Modifier.width(18.dp))
-
-                Icon(
-                    painter = painterResource(R.drawable.comment),
-                    contentDescription = "Comment",
-                    modifier = Modifier.size(20.dp),
-                    tint = MaterialTheme.colorScheme.primary
+                Spacer(Modifier.height(6.dp))
+            if (post.mediaType == "image") {
+                Image(
+                    painter = rememberAsyncImagePainter(post.mediaUrl),
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxWidth().height(200.dp),
+                    contentScale = ContentScale.Crop
                 )
-                Spacer(modifier = Modifier.width(6.dp))
-                Text("${post.comments} comments",fontSize = 13.sp, color = MaterialTheme.colorScheme.outline)
+            }
+            Spacer(Modifier.height(6.dp))
+            Text(post.description)
+            Spacer(Modifier.height(8.dp))
+            Row {
+                IconButton(onClick = onLikeClick) {
+                    Icon(
+                        if (post.likes.contains(FirebaseAuth.getInstance().uid)) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
+                        contentDescription = "Like"
+                    )
+                }
+                Text("${post.likesCount} likes")
+
+                Spacer(Modifier.width(16.dp))
+
+                IconButton(onClick = onCommentClick) {
+                    Icon(painterResource(R.drawable.comment), contentDescription = "Comment")
+                }
+                Text("${post.commentsCount} comments")
             }
         }
     }
@@ -257,25 +261,28 @@ fun BottomNavBar(navController: NavHostController) {
         }
     }
 }
+fun timeAgo(time: Long): String {
+    val now = System.currentTimeMillis()
+    if (time > now || time <= 0) {
+        return "Just now"
+    }
 
-// Dummy data model
-data class Post(
-    val userName: String,
-    val groupName: String,
-    val timeAgo: String,
-    val userImage: Int,
-    val postImage: Int,
-    val description: String,
-    val likes: Int,
-    val comments: Int
-)
+    val diff = now - time
 
-// Dummy post list
-val dummyPosts = listOf(
-    Post("Tyler Durden", "", "3 min ago", R.drawable.user1, R.drawable.post1, "We are Consumers", 21, 4),
-    Post("Daniel", "", "2 hrs ago", R.drawable.user2, R.drawable.post2, "The First Rule is :- ", 6, 18),
-    Post("Fight Club", "", "3 min ago", R.drawable.user3, R.drawable.post3, "Gentlemen Welcome to Fight Club", 21, 4),
-    Post("Marla", "", "2 hrs ago", R.drawable.user1, R.drawable.post4, "What are you Thinking about Life?", 6, 18),
-    Post("Be a Man", "", "3 min ago", R.drawable.user2, R.drawable.post5, "You have to Fight", 21, 4),
-    Post("Rocky", "", "2 hrs ago", R.drawable.user3, R.drawable.post6, "What the Hell is going on here!", 6, 18)
-)
+    val seconds = diff / 1000
+    val minutes = seconds / 60
+    val hours = minutes / 60
+    val days = hours / 24
+
+    return when {
+        seconds < 60 -> "Just now"
+        minutes < 60 -> "$minutes m ago"
+        hours < 24 -> "$hours h ago"
+        days < 7 -> "$days d ago"
+        days < 30 -> "${days / 7} w ago"
+        days < 365 -> "${days / 30} mo ago"
+        else -> "${days / 365} y ago"
+    }
+}
+
+

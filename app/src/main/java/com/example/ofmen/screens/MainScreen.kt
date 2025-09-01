@@ -13,7 +13,9 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.ofmen.DataStoreManager
+import com.example.ofmen.viewmodel.FeedViewModel
 import com.example.ofmen.viewmodel.ProfileViewModel
+import com.example.ofmen.viewmodel.YourPostsViewModel
 
 
 @Composable
@@ -42,10 +44,12 @@ fun MainScreen(){
                 startDestination = if (isLoggedIn) "home" else "rules",
                 modifier = Modifier.padding(innerPadding)
             ) {
-                composable("home") { HomeScreen() }
+                composable("home") { val feedViewModel: FeedViewModel = viewModel()
+                    HomeScreen(viewModel = feedViewModel) }
                 composable("community") { CommunityScreen(navController) }
-                composable("post") { NewPostScreen() }
-                composable("tasks") { TaskScreen() }
+                composable("post") { NewPostScreen(cloudName = "dvyfzlzzq", uploadPreset = "unsigned_posts_preset") }
+                composable("tasks") { val yourPostsViewModel: YourPostsViewModel = viewModel()
+                    YourPostsScreen(viewModel = yourPostsViewModel) }
                 composable("profile") { val profileViewModel: ProfileViewModel = viewModel()
                     ProfileScreen( dataStoreManager, navController, viewModel = profileViewModel) }
                 composable("join") { JoinScreen() }
