@@ -73,7 +73,7 @@ fun ProfileScreen(
             // Page heading
             Text(
                 text = "Profile",
-                fontSize = 22.sp,
+                fontSize = 28.sp,
                 fontFamily = bebasNeue,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onBackground,
@@ -101,7 +101,7 @@ fun ProfileScreen(
                 text = "Edit",
                 fontSize = 14.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = Color.Green,
+                color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.clickable { imagePicker.launch("image/*") }
             )
 
@@ -236,11 +236,11 @@ fun ProfileScreen(
                     .height(50.dp)
                     .width(170.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Green
+                    containerColor = MaterialTheme.colorScheme.onBackground
                 ),
                 shape = RoundedCornerShape(10.dp)
             ) {
-                Text("Save", fontFamily = bebasNeue,fontWeight = FontWeight.Bold, color = Color.White)
+                Text("Save", fontFamily = bebasNeue,fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.surface, fontSize = 24.sp)
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -264,7 +264,7 @@ fun ProfileScreen(
                 ),
                 shape = RoundedCornerShape(10.dp)
             ) {
-                Text("Logout", color = Color.White,fontFamily = bebasNeue, fontWeight = FontWeight.Bold)
+                Text("Logout", color = Color.White, fontSize = 24.sp,fontFamily = bebasNeue, fontWeight = FontWeight.Bold)
             }
         }
     }
