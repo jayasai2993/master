@@ -9,12 +9,17 @@ import kotlinx.coroutines.launch
 
 data class Post(
     val id: String,
-    val title: String,
-    val description: String,
+    val userId: String,
+    val username: String,
+    val profileImageUrl: String,
     val mediaUrl: String,
     val mediaType: String,
-    val username: String,
-    val profileImageUrl: String
+    val title: String,
+    val description: String,
+    val createdAt: Long,
+    val likes: List<String> = emptyList(),
+    val likesCount: Int = 0,
+    val commentsCount: Int = 0
 )
 
 class YourPostsViewModel(
@@ -36,7 +41,12 @@ class YourPostsViewModel(
                         mediaUrl = doc.getString("mediaUrl") ?: "",
                         mediaType = doc.getString("mediaType") ?: "image",
                         username = doc.getString("username") ?: "Unknown",
-                        profileImageUrl = doc.getString("profileImageUrl") ?: ""
+                        profileImageUrl = doc.getString("profileImageUrl") ?: "",
+                        createdAt = doc.getTimestamp("createdAt")?.toDate()?.time ?: 0L,
+                        likes = doc.get("likes") as? List<String> ?: emptyList(),
+                        likesCount = doc.getLong("likesCount")?.toInt() ?: 0,
+                        commentsCount = doc.getLong("commentsCount")?.toInt() ?: 0,
+                        userId = doc.getString("userId") ?: ""
                     )
                 }
                 _posts.value = list

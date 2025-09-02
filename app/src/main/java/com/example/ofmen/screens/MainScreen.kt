@@ -47,15 +47,15 @@ fun MainScreen(){
                 composable("home") { val feedViewModel: FeedViewModel = viewModel()
                     HomeScreen(viewModel = feedViewModel) }
                 composable("community") { CommunityScreen(navController) }
-                composable("post") { NewPostScreen(cloudName = "dvyfzlzzq", uploadPreset = "unsigned_posts_preset") }
-                composable("tasks") { val yourPostsViewModel: YourPostsViewModel = viewModel()
-                    YourPostsScreen(viewModel = yourPostsViewModel) }
+                composable("post") { NewPostScreen(cloudName = "dvyfzlzzq", uploadPreset = "unsigned_posts_preset",navController) }
+                composable("tasks") { TaskScreen() }
                 composable("profile") { val profileViewModel: ProfileViewModel = viewModel()
                     ProfileScreen( dataStoreManager, navController, viewModel = profileViewModel) }
-                composable("join") { JoinScreen() }
                 composable("login") { LoginScreen(navController, dataStoreManager) }
                 composable("signup") { SignupScreen(navController) }
                 composable("rules") { RulesScreen(navController) }
+                composable("YourPosts") { val yourPostsViewModel: YourPostsViewModel = viewModel()
+                    YourPostsScreen(viewModel = yourPostsViewModel) }
             }
         }
 }

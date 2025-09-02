@@ -34,7 +34,6 @@ class PostViewModel(private val repo: PostRepository) : ViewModel() {
                     .document(uid ?: "").get().await()
                 val username = userDoc.getString("username") ?: "Unknown"
                 val profileImageUrl = userDoc.getString("profileImageUrl") ?: ""
-                Log.d("PostDebug", "Fetched user -> username: $username, profileImageUrl: $profileImageUrl")
                 repo.uploadAndCreatePost(context, title, description, fileUri,username,
                     profileImageUrl)
                 _status.value = "success"

@@ -25,12 +25,10 @@ import coil.compose.AsyncImage
 import com.example.ofmen.DataStoreManager
 import com.example.ofmen.R
 import com.example.ofmen.viewmodel.ProfileViewModel
-import com.google.firebase.Firebase
-import com.google.firebase.auth.auth
+import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-
 
 @Composable
 fun ProfileScreen(
@@ -42,35 +40,58 @@ fun ProfileScreen(
 
     var username by remember { mutableStateOf(profile.username) }
     var bio by remember { mutableStateOf(profile.bio) }
-    var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
 
+    var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
+    var showCropScreen by remember { mutableStateOf(false) }
+
+    // image picker launcher
     val imagePicker = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
-        selectedImageUri = uri
+        if (uri != null) {
+            // open crop screen for picked image
+            selectedImageUri = uri
+            showCropScreen = true
+        }
     }
 
-    // ✅ Load profile once when screen starts
-    LaunchedEffect(Unit) {
-        viewModel.loadUserProfile()
-    }
+    // load profile initially
+    LaunchedEffect(Unit) { viewModel.loadUserProfile() }
 
-    // ✅ Keep username and bio in sync with latest profile
+    // keep fields in sync if profile updates
     LaunchedEffect(profile) {
         username = profile.username
         bio = profile.bio
     }
 
+    // If cropping UI is active, show crop screen full-screen and return early
+    if (showCropScreen && selectedImageUri != null) {
+        ProfileCropScreen(
+            imageUri = selectedImageUri!!,
+            onImageCropped = { croppedUri ->
+                // receive cropped image uri and set it to show in ProfileScreen
+                selectedImageUri = croppedUri
+                showCropScreen = false
+            },
+            onCancel = {
+                // user cancelled cropping
+                showCropScreen = false
+            }
+        )
+        return
+    }
+
+    // --- Original ProfileScreen UI (kept your structure / styling) ---
     Scaffold { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background)
                 .padding(padding)
-                .padding(20.dp),
+                .padding(15.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Page heading
+            // Page heading - I preserved your font use (assumes bebasNeue defined elsewhere)
             Text(
                 text = "Profile",
                 fontSize = 28.sp,
@@ -80,8 +101,9 @@ fun ProfileScreen(
                 modifier = Modifier.align(Alignment.CenterHorizontally)
             )
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(17.dp))
 
+            // Profile image - shows cropped image if available, else stored URL, else placeholder
             AsyncImage(
                 model = when {
                     selectedImageUri != null -> selectedImageUri
@@ -105,11 +127,10 @@ fun ProfileScreen(
                 modifier = Modifier.clickable { imagePicker.launch("image/*") }
             )
 
-            Spacer(modifier = Modifier.height(28.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
-            // Username field
+            // Username field (kept your logic)
             var isEditingUserName by remember { mutableStateOf(false) }
-
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
@@ -165,9 +186,8 @@ fun ProfileScreen(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-// Bio field
+            // Bio field (kept your logic)
             var isEditing by remember { mutableStateOf(false) }
-
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
@@ -221,17 +241,15 @@ fun ProfileScreen(
                 }
             }
 
+            Spacer(modifier = Modifier.height(20.dp))
 
-
-            Spacer(modifier = Modifier.height(28.dp))
-
-            // Save Button
+            // Save Button (calls your viewModel update; now selectedImageUri will be the cropped uri if user cropped)
             Button(
                 onClick = {
                     viewModel.updateUserProfile(username, bio, selectedImageUri)
                     selectedImageUri = null
                     navController.navigate("home")
-                          },
+                },
                 modifier = Modifier
                     .height(50.dp)
                     .width(170.dp),
@@ -240,7 +258,7 @@ fun ProfileScreen(
                 ),
                 shape = RoundedCornerShape(10.dp)
             ) {
-                Text("Save", fontFamily = bebasNeue,fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.surface, fontSize = 24.sp)
+                Text("Save", fontFamily = bebasNeue, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.surface, fontSize = 24.sp)
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -248,7 +266,7 @@ fun ProfileScreen(
             // Logout Button
             Button(
                 onClick = {
-                    Firebase.auth.signOut()
+                    FirebaseAuth.getInstance().signOut()
                     CoroutineScope(Dispatchers.IO).launch {
                         dataStoreManager.setLoggedIn(false)
                     }
@@ -264,7 +282,7 @@ fun ProfileScreen(
                 ),
                 shape = RoundedCornerShape(10.dp)
             ) {
-                Text("Logout", color = Color.White, fontSize = 24.sp,fontFamily = bebasNeue, fontWeight = FontWeight.Bold)
+                Text("Logout", color = Color.White, fontSize = 24.sp, fontFamily = bebasNeue, fontWeight = FontWeight.Bold)
             }
         }
     }

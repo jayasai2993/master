@@ -18,8 +18,8 @@ fun CommunityScreen(navController: NavController){
         modifier = Modifier.fillMaxSize()
     ){
         Column {
-            Button(onClick = { navController.navigate("join") }) {
-                Text("Click Me")
+            Button( onClick = {}) {
+                Text("Work In Progress")
             }
         }
     }

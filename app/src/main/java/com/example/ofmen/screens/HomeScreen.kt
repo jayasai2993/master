@@ -14,10 +14,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
@@ -28,13 +30,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
-import coil.compose.rememberAsyncImagePainter
 import com.example.ofmen.R
 import com.example.ofmen.viewmodel.FeedPost
 import com.example.ofmen.viewmodel.FeedViewModel
 import com.google.firebase.auth.FirebaseAuth
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import coil.compose.rememberAsyncImagePainter
+import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.tasks.await
 
 // Load Bebas Neue font
 val bebasNeue = FontFamily(Font(R.font.bebas_neue_regular))
@@ -100,71 +104,122 @@ fun PostCard(
     onCommentClick: () -> Unit
 ) {
     Card(
-        shape = RoundedCornerShape(16.dp),
-        modifier = Modifier.fillMaxWidth().padding(10.dp)
+        shape = RoundedCornerShape(12.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 12.dp, vertical = 8.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
-        Column(Modifier.padding(16.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
+        Column(modifier = Modifier.fillMaxWidth()) {
+
+            // User row
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 if (post.profileImageUrl.isNotEmpty()) {
                     AsyncImage(
                         model = post.profileImageUrl,
                         contentDescription = "Profile image",
                         modifier = Modifier
-                            .size(40.dp)
+                            .size(42.dp)
                             .clip(CircleShape)
                     )
                 } else {
-                    // fallback placeholder - use a drawable or initials
                     Box(
                         modifier = Modifier
-                            .size(40.dp)
+                            .size(42.dp)
                             .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)),
+                            .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.15f)),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(post.username.firstOrNull()?.toString() ?: "U")
                     }
                 }
 
-                Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.width(10.dp))
 
                 Column {
-                    Text(post.username, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
-                    Text(timeAgo(post.createdAt),style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
-                }
-            }
-
-                Spacer(Modifier.height(6.dp))
-            if (post.mediaType == "image") {
-                Image(
-                    painter = rememberAsyncImagePainter(post.mediaUrl),
-                    contentDescription = null,
-                    modifier = Modifier.fillMaxWidth().height(200.dp),
-                    contentScale = ContentScale.Crop
-                )
-            }
-            Spacer(Modifier.height(6.dp))
-            Text(post.description)
-            Spacer(Modifier.height(8.dp))
-            Row {
-                IconButton(onClick = onLikeClick) {
-                    Icon(
-                        if (post.likes.contains(FirebaseAuth.getInstance().uid)) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
-                        contentDescription = "Like"
+                    Text(
+                        text = post.username,
+                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold)
+                    )
+                    Text(
+                        text = timeAgo(post.createdAt),
+                        style = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
                     )
                 }
-                Text("${post.likesCount} likes")
+            }
 
-                Spacer(Modifier.width(16.dp))
+            // Post Image (show full without cropping)
+            if (post.mediaType == "image") {
+                AsyncImage(
+                    model = post.mediaUrl,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 200.dp) // ensures visible height
+                        .clip(RoundedCornerShape(8.dp)),
+                    contentScale = ContentScale.FillWidth // show full width, preserve aspect ratio
+                )
+            }
 
-                IconButton(onClick = onCommentClick) {
-                    Icon(painterResource(R.drawable.comment), contentDescription = "Comment")
+
+            // Description
+            if (post.description.isNotEmpty()) {
+                Text(
+                    text = post.description,
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
+                )
+            }
+
+            Divider()
+
+            // Likes & Comments Row
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp, vertical = 6.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Start
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(end = 20.dp)
+                ) {
+                    IconButton(onClick = onLikeClick, modifier = Modifier.size(28.dp)) {
+                        Icon(
+                            imageVector = if (post.likes.contains(FirebaseAuth.getInstance().uid))
+                                Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
+                            contentDescription = "Like",
+                            tint = if (post.likes.contains(FirebaseAuth.getInstance().uid))
+                                MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                    Text("${post.likesCount} likes", style = MaterialTheme.typography.bodySmall)
                 }
-                Text("${post.commentsCount} comments")
+
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(
+                        onClick = onCommentClick,
+                        modifier = Modifier.size(28.dp)
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.comment),
+                            contentDescription = "Comment",
+                            modifier = Modifier.size(20.dp) // smaller comment icon
+                        )
+                    }
+                    Text("${post.commentsCount} comments", style = MaterialTheme.typography.bodySmall)
+                }
             }
         }
     }
 }
+
 
 @Composable
 fun BottomNavBar(navController: NavHostController) {
@@ -182,7 +237,20 @@ fun BottomNavBar(navController: NavHostController) {
     ) {
         val navBackStackEntry by navController.currentBackStackEntryAsState()
         val currentRoute = navBackStackEntry?.destination?.route
+        var profileImageUrl by remember { mutableStateOf<String?>(null) }
 
+        // Fetch profile image once
+        LaunchedEffect(Unit) {
+            val uid = FirebaseAuth.getInstance().currentUser?.uid
+            if (uid != null) {
+                val userDoc = FirebaseFirestore.getInstance()
+                    .collection("users")
+                    .document(uid)
+                    .get()
+                    .await()
+                profileImageUrl = userDoc.getString("profileImageUrl")
+            }
+        }
         items.forEach { screen ->
             NavigationBarItem(
                 selected = currentRoute == screen.route,
@@ -208,7 +276,7 @@ fun BottomNavBar(navController: NavHostController) {
                             modifier = Modifier.size(26.dp)
                         )
                         Screen.Profile -> Image(
-                            painter = painterResource(R.drawable.user1),
+                            painter = rememberAsyncImagePainter(model = profileImageUrl),
                             contentDescription = "Profile",
                             modifier = Modifier
                                 .size(28.dp)
