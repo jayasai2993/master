@@ -1,8 +1,13 @@
 package com.example.ofmen.screens
 
-import android.graphics.Color
+import android.util.Log
+import android.view.ViewGroup
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -11,17 +16,14 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.boundsInWindow
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
@@ -29,15 +31,21 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
+import coil.compose.AsyncImage
+import coil.compose.rememberAsyncImagePainter
 import com.example.ofmen.R
 import com.example.ofmen.viewmodel.FeedPost
 import com.example.ofmen.viewmodel.FeedViewModel
+import com.google.android.exoplayer2.ExoPlayer
+import com.google.android.exoplayer2.MediaItem
+import com.google.android.exoplayer2.Player
+import com.google.android.exoplayer2.ui.PlayerView
+import com.google.android.exoplayer2.video.VideoSize
 import com.google.firebase.auth.FirebaseAuth
-import androidx.lifecycle.viewmodel.compose.viewModel
-import coil.compose.AsyncImage
-import coil.compose.rememberAsyncImagePainter
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 
@@ -47,23 +55,27 @@ val bebasNeue = FontFamily(Font(R.font.bebas_neue_regular))
 @Composable
 fun HomeScreen(viewModel: FeedViewModel = viewModel()) {
     val posts by viewModel.feedPosts.collectAsState()
+    var currentPlayingPostId by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(Unit) {
         viewModel.loadFeed()
     }
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
-        ) {
-            items(posts) { post ->
-                PostCard(
-                    post = post,
-                    onLikeClick = { viewModel.toggleLike(post) },
-                    onCommentClick = { viewModel.addComment(post.id, "Nice!") }
-                )
-            }
+
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+    ) {
+        items(posts,key = { it.id }) { post ->
+            PostCard(
+                post = post,
+                isPlaying = currentPlayingPostId == post.id,
+                onVisible = { currentPlayingPostId = post.id },
+                onLikeClick = { viewModel.toggleLike(post) },
+                onCommentClick = { viewModel.addComment(post.id, "Nice!") }
+            )
         }
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -97,10 +109,11 @@ fun HomeTopBar() {
         )
     )
 }
-
 @Composable
 fun PostCard(
     post: FeedPost,
+    isPlaying: Boolean,
+    onVisible: () -> Unit,
     onLikeClick: () -> Unit,
     onCommentClick: () -> Unit
 ) {
@@ -154,8 +167,122 @@ fun PostCard(
                 }
             }
 
-            // Post Image (show full without cropping)
-            if (post.mediaType == "image") {
+            // Check if media is a video
+            val isVideo = post.mediaUrl.endsWith(".mp4", ignoreCase = true) ||
+                    post.mediaUrl.endsWith(".mov", ignoreCase = true) ||
+                    post.mediaUrl.endsWith(".mkv", ignoreCase = true)
+
+            if (isVideo) {
+                val context = LocalContext.current
+                var videoAspectRatio by remember { mutableStateOf(16f / 9f) }
+                val exoPlayer = remember(post.mediaUrl) {
+                    ExoPlayer.Builder(context).build().apply {
+                        setMediaItem(MediaItem.fromUri(post.mediaUrl))
+                        prepare()
+                        playWhenReady = false
+                    }
+                }
+
+                var isPlaying by remember { mutableStateOf(false) }
+                var userPaused by remember { mutableStateOf(false) } // Track manual pause
+                var showControls by remember { mutableStateOf(true) }
+                var autoPlay by remember { mutableStateOf(false) } // visibility-based
+
+                // Update aspect ratio dynamically
+                DisposableEffect(exoPlayer) {
+                    val listener = object : Player.Listener {
+                        override fun onVideoSizeChanged(videoSize: VideoSize) {
+                            if (videoSize.height != 0) {
+                                videoAspectRatio = videoSize.width.toFloat() / videoSize.height
+                            }
+                        }
+                    }
+                    exoPlayer.addListener(listener)
+                    onDispose {
+                        exoPlayer.removeListener(listener)
+                        exoPlayer.release()
+                    }
+                }
+
+                // Play video based on manual tap or auto-play
+                LaunchedEffect(isPlaying, autoPlay, userPaused) {
+                    exoPlayer.playWhenReady = if (userPaused) isPlaying else isPlaying || autoPlay
+                }
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .aspectRatio(videoAspectRatio)
+                        .clip(RoundedCornerShape(8.dp))
+                        .onGloballyPositioned { coords ->
+                            val windowBounds = coords.boundsInWindow()
+                            val parentBounds = coords.parentLayoutCoordinates?.boundsInWindow()
+                            if (parentBounds != null) {
+                                val visibleHeight = windowBounds.height.coerceAtMost(parentBounds.height)
+                                autoPlay = visibleHeight > parentBounds.height / 2
+                            }
+                        }
+                        .clickable {
+                            isPlaying = !isPlaying
+                            showControls = true
+                            userPaused = !isPlaying // mark manual pause
+                        }
+                ) {
+                    // Video Player
+                    AndroidView(
+                        factory = {
+                            PlayerView(it).apply {
+                                player = exoPlayer
+                                useController = false
+                                layoutParams = ViewGroup.LayoutParams(
+                                    ViewGroup.LayoutParams.MATCH_PARENT,
+                                    ViewGroup.LayoutParams.MATCH_PARENT
+                                )
+                            }
+                        },
+                        modifier = Modifier.matchParentSize()
+                    )
+
+                    // Centered Play/Pause Button with fade animation
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        androidx.compose.animation.AnimatedVisibility(
+                            visible = showControls,
+                            enter = fadeIn(),
+                            exit = fadeOut()
+                        ) {
+                            IconButton(
+                                onClick = {
+                                    isPlaying = !isPlaying
+                                    showControls = true
+                                    userPaused = !isPlaying // manual pause
+                                },
+                                modifier = Modifier
+                                    .background(
+                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                                        shape = CircleShape
+                                    )
+                                    .size(60.dp)
+                            ) {
+                                Icon(
+                                    imageVector = if (isPlaying) Icons.Default.CheckCircle else Icons.Default.PlayArrow,
+                                    contentDescription = if (isPlaying) "Pause" else "Play",
+                                    tint = MaterialTheme.colorScheme.surface,
+                                    modifier = Modifier.size(36.dp)
+                                )
+                            }
+                        }
+                    }
+
+                    // Auto-hide controls after 2.5 seconds
+                    LaunchedEffect(showControls) {
+                        if (showControls) {
+                            kotlinx.coroutines.delay(2500)
+                            showControls = false
+                        }
+                    }
+                }
+            }
+            else {
                 AsyncImage(
                     model = post.mediaUrl,
                     contentDescription = null,
@@ -163,10 +290,9 @@ fun PostCard(
                         .fillMaxWidth()
                         .wrapContentHeight()
                         .clip(RoundedCornerShape(8.dp)),
-                    contentScale = ContentScale.FillWidth // show full width, preserve aspect ratio
+                    contentScale = ContentScale.FillWidth
                 )
             }
-
 
             // Description
             if (post.description.isNotEmpty()) {
@@ -175,46 +301,48 @@ fun PostCard(
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
                 )
-            }
 
-            Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))
+                Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))
 
-            // Likes & Comments Row
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 8.dp, vertical = 6.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Start
-            ) {
                 Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 8.dp, vertical = 6.dp),
                     verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(end = 20.dp)
+                    horizontalArrangement = Arrangement.Start
                 ) {
-                    IconButton(onClick = onLikeClick, modifier = Modifier.size(28.dp)) {
-                        Icon(
-                            imageVector = if (post.likes.contains(FirebaseAuth.getInstance().uid))
-                                Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
-                            contentDescription = "Like",
-                            tint = if (post.likes.contains(FirebaseAuth.getInstance().uid))
-                                MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
-                        )
-                    }
-                    Text("${post.likesCount} likes", style = MaterialTheme.typography.bodySmall)
-                }
-
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    IconButton(
-                        onClick = onCommentClick,
-                        modifier = Modifier.size(28.dp)
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(end = 20.dp)
                     ) {
-                        Icon(
-                            painter = painterResource(R.drawable.comment),
-                            contentDescription = "Comment",
-                            modifier = Modifier.size(20.dp) // smaller comment icon
+                        IconButton(onClick = onLikeClick, modifier = Modifier.size(28.dp)) {
+                            Icon(
+                                imageVector = if (post.likes.contains(FirebaseAuth.getInstance().uid))
+                                    Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
+                                contentDescription = "Like",
+                                tint = if (post.likes.contains(FirebaseAuth.getInstance().uid))
+                                    MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                        Text("${post.likesCount} likes", style = MaterialTheme.typography.bodySmall)
+                    }
+
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        IconButton(
+                            onClick = onCommentClick,
+                            modifier = Modifier.size(28.dp)
+                        ) {
+                            Icon(
+                                painter = painterResource(R.drawable.comment),
+                                contentDescription = "Comment",
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                        Text(
+                            "${post.commentsCount} comments",
+                            style = MaterialTheme.typography.bodySmall
                         )
                     }
-                    Text("${post.commentsCount} comments", style = MaterialTheme.typography.bodySmall)
                 }
             }
         }
@@ -240,7 +368,6 @@ fun BottomNavBar(navController: NavHostController) {
         val currentRoute = navBackStackEntry?.destination?.route
         var profileImageUrl by remember { mutableStateOf<String?>(null) }
 
-        // Fetch profile image once
         LaunchedEffect(Unit) {
             val uid = FirebaseAuth.getInstance().currentUser?.uid
             if (uid != null) {
@@ -286,38 +413,12 @@ fun BottomNavBar(navController: NavHostController) {
                     }
                 },
                 label = {
-                    when (screen) {
-                        Screen.Home -> Text(
-                            text = "Home",
-                            fontFamily = bebasNeue,
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                        Screen.Community -> Text(
-                            text = "Community",
-                            fontFamily = bebasNeue,
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                        Screen.Post -> Text(
-                            text = "Post",
-                            fontFamily = bebasNeue,
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                        Screen.Tasks -> Text(
-                            text = "Tasks",
-                            fontFamily = bebasNeue,
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                        Screen.Profile -> Text(
-                            text = "Profile",
-                            fontFamily = bebasNeue,
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                    }
+                    Text(
+                        text = screen.route,
+                        fontFamily = bebasNeue,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
                 },
                 colors = NavigationBarItemDefaults.colors(
                     selectedIconColor = MaterialTheme.colorScheme.primary,
@@ -330,14 +431,12 @@ fun BottomNavBar(navController: NavHostController) {
         }
     }
 }
+
 fun timeAgo(time: Long): String {
     val now = System.currentTimeMillis()
-    if (time > now || time <= 0) {
-        return "Just now"
-    }
+    if (time > now || time <= 0) return "Just now"
 
     val diff = now - time
-
     val seconds = diff / 1000
     val minutes = seconds / 60
     val hours = minutes / 60
@@ -353,5 +452,3 @@ fun timeAgo(time: Long): String {
         else -> "${days / 365} y ago"
     }
 }
-
-

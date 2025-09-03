@@ -237,7 +237,7 @@ fun validateFile(context: Context, uri: Uri): Boolean {
     } catch (e: Exception) {
         File(uri.path ?: "").length()
     }
-    val maxSize = 10 * 1024 * 1024
+    val maxSize = 100 * 1024 * 1024
     if (fileSize > maxSize) {
         Toast.makeText(context, "File too large! Max size is 10MB", Toast.LENGTH_SHORT).show()
         return false
