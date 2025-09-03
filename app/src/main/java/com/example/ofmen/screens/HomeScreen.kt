@@ -1,5 +1,6 @@
 package com.example.ofmen.screens
 
+import android.graphics.Color
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -160,7 +161,7 @@ fun PostCard(
                     contentDescription = null,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .heightIn(min = 200.dp) // ensures visible height
+                        .wrapContentHeight()
                         .clip(RoundedCornerShape(8.dp)),
                     contentScale = ContentScale.FillWidth // show full width, preserve aspect ratio
                 )
@@ -176,7 +177,7 @@ fun PostCard(
                 )
             }
 
-            Divider()
+            Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))
 
             // Likes & Comments Row
             Row(
