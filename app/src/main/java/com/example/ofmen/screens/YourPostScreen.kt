@@ -166,7 +166,7 @@ fun YourPostCard(
                 }
             }
 
-            Divider()
+            Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))
 
             // Action Buttons Row
             Row(

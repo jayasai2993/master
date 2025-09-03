@@ -4,7 +4,7 @@ import androidx.compose.ui.graphics.Color
 
 
 // Brand & Accent Colors
-val RedPrimary = Color(0xFFFF0000)   // Bright red for buttons, highlights
+val RedPrimary = Color(0xFFE34234)   // Bright red for buttons, highlights
 
 // Dark Mode Colors
 val BlackBackground = Color(0xFF101010) // App background

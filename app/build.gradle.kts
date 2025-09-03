@@ -80,5 +80,7 @@ dependencies {
 
 // JSON parsing
     implementation ("org.json:json:20230227")
+    implementation ("com.google.android.exoplayer:exoplayer:2.19.1")
+
 
 }

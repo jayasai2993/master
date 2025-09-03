@@ -102,14 +102,13 @@ fun NewPostScreen(
                         .padding(20.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    Text(
-                        "Create New Post",
-                        style = MaterialTheme.typography.headlineSmall.copy(
-                            fontWeight = FontWeight.Bold
-                        ),
-                        color = MaterialTheme.colorScheme.primary
-                    )
-
+                        Text(
+                            "Create New Post",
+                            style = MaterialTheme.typography.headlineSmall.copy(
+                                fontWeight = FontWeight.Bold
+                            ),
+                            color = MaterialTheme.colorScheme.primary
+                        )
                     OutlinedTextField(
                         value = title,
                         onValueChange = { title = it },
@@ -159,16 +158,26 @@ fun NewPostScreen(
                                 }
                             }
                         },
-                        enabled = !loading && selectedUri != null,
+                        enabled = !loading && selectedUri != null && status != "success",
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(55.dp),
                         shape = RoundedCornerShape(14.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = if (loading) Color.Gray else MaterialTheme.colorScheme.secondary
+                            containerColor = when {
+                                loading -> Color.Gray
+                                status == "success" -> Color.Green
+                                else -> MaterialTheme.colorScheme.secondary
+                            }
                         )
                     ) {
-                        Text(if (loading) "⏳ Posting..." else "🚀 Post")
+                        Text(
+                            when {
+                                loading -> "⏳ Posting..."
+                                status == "success" -> "✅ Posted"
+                                else -> "🚀 Post"
+                            }
+                        )
                     }
 
                     status?.let {
@@ -180,6 +189,7 @@ fun NewPostScreen(
                             style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium)
                         )
                     }
+
                     Spacer(modifier = Modifier.height(16.dp))
                     Button(
                         onClick = { navController.navigate("YourPosts") },
@@ -227,7 +237,7 @@ fun validateFile(context: Context, uri: Uri): Boolean {
     } catch (e: Exception) {
         File(uri.path ?: "").length()
     }
-    val maxSize = 10 * 1024 * 1024
+    val maxSize = 100 * 1024 * 1024
     if (fileSize > maxSize) {
         Toast.makeText(context, "File too large! Max size is 10MB", Toast.LENGTH_SHORT).show()
         return false
