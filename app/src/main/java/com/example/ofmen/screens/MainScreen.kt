@@ -79,6 +79,8 @@ fun MainScreen(){
                         commentViewModel = commentViewModel
                     )
                 }
+                composable("SavedPosts") { val feedViewModel: FeedViewModel = viewModel()
+                    SavedPostsScreen(viewModel = feedViewModel, navController) }
             }
         }
 }

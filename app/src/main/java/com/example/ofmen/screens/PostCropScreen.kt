@@ -17,14 +17,15 @@ import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
-import kotlin.math.roundToInt
 import kotlin.math.min
+import kotlin.math.roundToInt
 
 enum class CropAspect(val widthRatio: Int, val heightRatio: Int) {
     Square(1, 1),
@@ -53,6 +54,10 @@ fun PostCropScreen(
     var userScale by remember { mutableStateOf(1f) }
     var userOffset by remember { mutableStateOf(Offset.Zero) }
     var selectedAspect by remember { mutableStateOf(CropAspect.Square) }
+
+    // store latest rects used in Canvas
+    var lastCropRect by remember { mutableStateOf<RectF?>(null) }
+    var lastDstRect by remember { mutableStateOf<RectF?>(null) }
 
     val coroutineScope = rememberCoroutineScope()
 
@@ -95,16 +100,18 @@ fun PostCropScreen(
                 }
                 val cropLeft = (size.width - cropWidth) / 2f
                 val cropTop = (size.height - cropHeight) / 2f
-                val cropRight = cropLeft + cropWidth
-                val cropBottom = cropTop + cropHeight
-                val cropRect = RectF(cropLeft, cropTop, cropRight, cropBottom)
+                val cropRect = RectF(cropLeft, cropTop, cropLeft + cropWidth, cropTop + cropHeight)
+
+                // Save rects for cropping
+                lastCropRect = cropRect
+                lastDstRect = dstRect
 
                 drawIntoCanvas { canvas ->
                     val paint = Paint(Paint.ANTI_ALIAS_FLAG)
 
-                    // draw dark overlay
+                    // dark overlay
                     val overlayPaint = Paint().apply {
-                        color = android.graphics.Color.parseColor("#AA000000")
+                        color = Color.parseColor("#AA000000")
                         style = Paint.Style.FILL
                     }
                     canvas.nativeCanvas.drawRect(0f, 0f, size.width, size.height, overlayPaint)
@@ -115,14 +122,14 @@ fun PostCropScreen(
                     }
                     canvas.nativeCanvas.drawRect(cropRect, clearPaint)
 
-                    // draw image behind (so it shows through crop area)
+                    // draw image behind (shows through crop area)
                     canvas.nativeCanvas.drawBitmap(bmp, null, dstRect, paint)
                 }
 
                 // white border
                 drawIntoCanvas { canvas ->
                     val strokePaint = Paint().apply {
-                        color = android.graphics.Color.WHITE
+                        color = Color.WHITE
                         style = Paint.Style.STROKE
                         strokeWidth = 4f * density.density
                         isAntiAlias = true
@@ -159,10 +166,12 @@ fun PostCropScreen(
                     OutlinedButton(onClick = onCancel) { Text("Cancel") }
                     Button(onClick = {
                         coroutineScope.launch {
-                            val cropped = performAspectCrop(
-                                context, bmp, selectedAspect, userScale, userOffset
-                            )
-                            cropped?.let { onImageCropped(it) }
+                            if (lastCropRect != null && lastDstRect != null) {
+                                val cropped = performAspectCrop(
+                                    context, bmp, lastCropRect!!, lastDstRect!!
+                                )
+                                cropped?.let { onImageCropped(it) }
+                            }
                         }
                     }) { Text("Save") }
                 }
@@ -174,40 +183,23 @@ fun PostCropScreen(
 suspend fun performAspectCrop(
     context: Context,
     bitmap: Bitmap,
-    aspect: CropAspect,
-    userScale: Float,
-    userOffset: Offset
+    cropRect: RectF,
+    dstRect: RectF
 ): Uri? = withContext(Dispatchers.IO) {
     try {
-        val viewW = bitmap.width.toFloat()
-        val viewH = bitmap.height.toFloat()
+        // Map cropRect (screen coords) into bitmap coords
+        val scaleX = bitmap.width / dstRect.width()
+        val scaleY = bitmap.height / dstRect.height()
 
-        // Base scale to fit image to screen (simulate)
-        val baseScale = min(1080f / viewW, 1080f / viewH) // assume ~screen size
-        val totalScale = baseScale * userScale
-
-        // Crop area dimensions
-        val cropW = 1080f * 0.9f
-        val cropH = when (aspect) {
-            CropAspect.Square -> cropW
-            CropAspect.Portrait -> cropW * 1.25f
-            CropAspect.Landscape -> cropW * 0.5625f
-        }
-
-        // Apply transforms back to bitmap coordinates
-        val left = ((1080f - cropW) / 2f - userOffset.x) / totalScale
-        val top = ((1080f - cropH) / 2f - userOffset.y) / totalScale
-        val width = cropW / totalScale
-        val height = cropH / totalScale
-
-        val cropLeft = left.roundToInt().coerceAtLeast(0)
-        val cropTop = top.roundToInt().coerceAtLeast(0)
-        val cropRight = (left + width).roundToInt().coerceAtMost(bitmap.width)
-        val cropBottom = (top + height).roundToInt().coerceAtMost(bitmap.height)
+        val cropLeft = ((cropRect.left - dstRect.left) * scaleX).roundToInt().coerceAtLeast(0)
+        val cropTop = ((cropRect.top - dstRect.top) * scaleY).roundToInt().coerceAtLeast(0)
+        val cropRight = ((cropRect.right - dstRect.left) * scaleX).roundToInt().coerceAtMost(bitmap.width)
+        val cropBottom = ((cropRect.bottom - dstRect.top) * scaleY).roundToInt().coerceAtMost(bitmap.height)
 
         val src = Bitmap.createBitmap(
             bitmap,
-            cropLeft, cropTop,
+            cropLeft,
+            cropTop,
             (cropRight - cropLeft).coerceAtLeast(1),
             (cropBottom - cropTop).coerceAtLeast(1)
         )
@@ -215,7 +207,6 @@ suspend fun performAspectCrop(
         val outputFile = File(context.cacheDir, "post_crop_${System.currentTimeMillis()}.png")
         FileOutputStream(outputFile).use { fos ->
             src.compress(Bitmap.CompressFormat.PNG, 100, fos)
-            fos.flush()
         }
         Uri.fromFile(outputFile)
     } catch (e: Exception) {

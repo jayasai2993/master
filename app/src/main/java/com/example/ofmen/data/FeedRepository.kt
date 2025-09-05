@@ -45,4 +45,26 @@ class FeedRepository(
         // Increment comments count in post
         postsCollection.document(postId).update("commentsCount", com.google.firebase.firestore.FieldValue.increment(1)).await()
     }
+    suspend fun toggleSavePost(postId: String, userId: String, saved: Boolean) {
+        val userSavedRef = db.collection("users").document(userId).collection("savedPosts").document(postId)
+
+        if (saved) {
+            val postData = hashMapOf(
+                "postId" to postId,
+                "savedAt" to com.google.firebase.Timestamp.now()
+            )
+            userSavedRef.set(postData).await()
+        } else {
+            userSavedRef.delete().await()
+        }
+    }
+
+    suspend fun getSavedPosts(userId: String) =
+        db.collection("users").document(userId).collection("savedPosts")
+            .orderBy("savedAt", Query.Direction.DESCENDING)
+            .get()
+            .await()
+    suspend fun getPostById(postId: String) =
+        postsCollection.document(postId).get().await().takeIf { it.exists() }
+
 }

@@ -21,7 +21,8 @@ data class FeedPost(
     val createdAt: Long,
     val likes: List<String> = emptyList(),
     val likesCount: Int = 0,
-    val commentsCount: Int = 0
+    val commentsCount: Int = 0,
+    val isSaved: Boolean = false
 )
 
 class FeedViewModel(
@@ -32,9 +33,62 @@ class FeedViewModel(
     private val _feedPosts = MutableStateFlow<List<FeedPost>>(emptyList())
     val feedPosts: StateFlow<List<FeedPost>> = _feedPosts
 
+    private val _savedPosts = MutableStateFlow<List<FeedPost>>(emptyList())
+    val savedPosts: StateFlow<List<FeedPost>> = _savedPosts
+
+    fun toggleSavePost(post: FeedPost) {
+        viewModelScope.launch {
+            val currentUserId = auth.currentUser?.uid ?: return@launch
+            repository.toggleSavePost(post.id, currentUserId, !post.isSaved)
+
+            // Refresh both feeds
+            loadFeed()
+            loadSavedPosts()
+        }
+    }
+
+
+    fun loadSavedPosts() {
+        viewModelScope.launch {
+            val currentUserId = auth.currentUser?.uid ?: return@launch
+            val snapshot = repository.getSavedPosts(currentUserId)
+
+            val savedPostsList = snapshot.documents.mapNotNull { savedDoc ->
+                val postId = savedDoc.getString("postId") ?: return@mapNotNull null
+                val postSnapshot = repository.getPostById(postId)
+                postSnapshot?.let { doc ->
+                    FeedPost(
+                        id = doc.id,
+                        userId = doc.getString("userId") ?: "",
+                        username = doc.getString("username") ?: "Unknown",
+                        profileImageUrl = doc.getString("profileImageUrl") ?: "",
+                        mediaUrl = doc.getString("mediaUrl") ?: "",
+                        mediaType = doc.getString("mediaType") ?: "image",
+                        title = doc.getString("title") ?: "",
+                        description = doc.getString("description") ?: "",
+                        createdAt = doc.getTimestamp("createdAt")?.toDate()?.time ?: 0L,
+                        likes = doc.get("likes") as? List<String> ?: emptyList(),
+                        likesCount = doc.getLong("likesCount")?.toInt() ?: 0,
+                        commentsCount = doc.getLong("commentsCount")?.toInt() ?: 0,
+                        isSaved = true
+                    )
+                }
+            }
+            _savedPosts.value = savedPostsList
+        }
+    }
+
+
     fun loadFeed() {
         viewModelScope.launch {
+            val currentUserId = auth.currentUser?.uid ?: return@launch
+
+            // Fetch all posts
             val snapshot = repository.getAllPosts()
+            // Fetch saved posts for current user
+            val savedSnapshot = repository.getSavedPosts(currentUserId)
+            val savedIds = savedSnapshot.documents.mapNotNull { it.getString("postId") }.toSet()
+
             val posts = snapshot.documents.map { doc ->
                 FeedPost(
                     id = doc.id,
@@ -48,12 +102,14 @@ class FeedViewModel(
                     createdAt = doc.getTimestamp("createdAt")?.toDate()?.time ?: 0L,
                     likes = doc.get("likes") as? List<String> ?: emptyList(),
                     likesCount = doc.getLong("likesCount")?.toInt() ?: 0,
-                    commentsCount = doc.getLong("commentsCount")?.toInt() ?: 0
+                    commentsCount = doc.getLong("commentsCount")?.toInt() ?: 0,
+                    isSaved = savedIds.contains(doc.id)  // 🔥 check if saved
                 )
             }
             _feedPosts.value = posts
         }
     }
+
 
     fun toggleLike(post: FeedPost) {
         viewModelScope.launch {

@@ -5,14 +5,18 @@ import android.net.Uri
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -87,21 +91,22 @@ fun NewPostScreen(
                     )
                 )
                 .padding(16.dp),
-            contentAlignment = Alignment.Center
+            contentAlignment = Alignment.TopCenter
         ) {
             Card(
                 shape = RoundedCornerShape(20.dp),
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .align(Alignment.TopCenter),
+                    .fillMaxWidth(),
                 elevation = CardDefaults.cardElevation(8.dp)
             ) {
-                Column(
+                LazyColumn(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(20.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
+                    item {
                         Text(
                             "Create New Post",
                             style = MaterialTheme.typography.headlineSmall.copy(
@@ -109,99 +114,149 @@ fun NewPostScreen(
                             ),
                             color = MaterialTheme.colorScheme.primary
                         )
-                    OutlinedTextField(
-                        value = title,
-                        onValueChange = { title = it },
-                        label = { Text("Title") },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp)
-                    )
-
-                    OutlinedTextField(
-                        value = description,
-                        onValueChange = { description = it },
-                        label = { Text("Description") },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp),
-                        maxLines = 4
-                    )
-
-                    Button(
-                        onClick = { launcher.launch("image/* video/*") },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(50.dp),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primary
-                        )
-                    ) {
-                        Text("📂 Choose Image / Video")
                     }
 
-                    selectedUri?.let {
-                        AsyncImage(
-                            model = it,
-                            contentDescription = "Preview",
+                    item {
+                        Button(
+                            onClick = { launcher.launch("image/* video/*") },
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(220.dp)
-                                .clip(RoundedCornerShape(15.dp))
+                                .height(50.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary
+                            )
+                        ) {
+                            Text("📂 Choose Image / Video")
+                        }
+                    }
+
+                    item {
+                        OutlinedTextField(
+                            value = title,
+                            onValueChange = { title = it },
+                            label = { Text("Title") },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp)
                         )
                     }
 
-                    Button(
-                        onClick = {
-                            selectedUri?.let { uri ->
-                                if (validateFile(context, uri)) {
-                                    viewModel.uploadPost(context, title, description, uri)
+                    item {
+                        OutlinedTextField(
+                            value = description,
+                            onValueChange = { description = it },
+                            label = { Text("Description") },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            maxLines = 4
+                        )
+                    }
+
+
+
+                    item {
+                        selectedUri?.let {
+                            AsyncImage(
+                                model = it,
+                                contentDescription = "Preview",
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .wrapContentHeight()
+                                    .clip(RoundedCornerShape(20.dp))
+                                    .border(
+                                        width = 2.dp,
+                                        color = Color.White.copy(alpha = 0.7f),
+                                        shape = RoundedCornerShape(20.dp)
+                                    )
+                                    .shadow(
+                                        elevation = 8.dp,
+                                        shape = RoundedCornerShape(20.dp),
+                                        clip = false
+                                    )
+                                    .background(
+                                        brush = Brush.linearGradient(
+                                            listOf(Color(0xFF1E1E1E), Color(0xFF2C2C2C))
+                                        )
+                                    )
+                                    .padding(6.dp)
+                                    .clip(RoundedCornerShape(16.dp))
+                                    .animateContentSize()
+                            )
+                        }
+                    }
+
+                    item {
+                        Button(
+                            onClick = {
+                                selectedUri?.let { uri ->
+                                    if (validateFile(context, uri)) {
+                                        viewModel.uploadPost(context, title, description, uri)
+                                    }
                                 }
-                            }
-                        },
-                        enabled = !loading && selectedUri != null && status != "success",
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(55.dp),
-                        shape = RoundedCornerShape(14.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = when {
-                                loading -> Color.Gray
-                                status == "success" -> Color.Green
-                                else -> MaterialTheme.colorScheme.secondary
-                            }
-                        )
-                    ) {
-                        Text(
-                            when {
-                                loading -> "⏳ Posting..."
-                                status == "success" -> "✅ Posted"
-                                else -> "🚀 Post"
-                            }
-                        )
+                            },
+                            enabled = !loading && selectedUri != null && status != "success",
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(55.dp),
+                            shape = RoundedCornerShape(14.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = when {
+                                    loading -> Color.Gray
+                                    status == "success" -> Color.Green
+                                    else -> MaterialTheme.colorScheme.secondary
+                                }
+                            )
+                        ) {
+                            Text(
+                                when {
+                                    loading -> "⏳ Posting..."
+                                    status == "success" -> "✅ Posted"
+                                    else -> "🚀 Post"
+                                }
+                            )
+                        }
                     }
 
-                    status?.let {
-                        val color =
-                            if (it == "success") MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
-                        Text(
-                            text = if (it == "success") "✅ Posted Successfully!" else "❌ $it",
-                            color = color,
-                            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium)
-                        )
+                    item {
+                        status?.let {
+                            val color =
+                                if (it == "success") MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
+                            Text(
+                                text = if (it == "success") "✅ Posted Successfully!" else "❌ $it",
+                                color = color,
+                                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium)
+                            )
+                        }
                     }
 
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Button(
-                        onClick = { navController.navigate("YourPosts") },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(50.dp),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.onBackground
-                        )
-                    ) {
-                        Text("Your Posts",color = MaterialTheme.colorScheme.surface)
+                    item {
+                        Button(
+                            onClick = { navController.navigate("YourPosts") },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(50.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.onBackground
+                            )
+                        ) {
+                            Text("Your Posts", color = MaterialTheme.colorScheme.surface)
+                        }
+                    }
+
+                    item {
+                        Button(
+                            onClick = { navController.navigate("SavedPosts") },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(50.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.onBackground
+                            )
+                        ) {
+                            Text("Saved Posts", color = MaterialTheme.colorScheme.surface)
+                        }
                     }
                 }
             }
