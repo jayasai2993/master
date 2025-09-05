@@ -23,6 +23,7 @@ import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
 import com.example.ofmen.viewmodel.CommentViewModel
 import com.example.ofmen.viewmodel.FeedPost
+import com.example.ofmen.viewmodel.FeedViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
@@ -33,6 +34,7 @@ fun DetailsScreen(
     commentViewModel: CommentViewModel = viewModel()
 ) {
     val comments by commentViewModel.comments.collectAsState()
+    val viewModel: FeedViewModel = viewModel()
 
     LaunchedEffect(post.id) {
         commentViewModel.loadComments(post.id)
@@ -118,8 +120,9 @@ fun DetailsScreen(
                     post = post,
                     isPlaying = false,
                     onVisible = {},
-                    onLikeClick = {},
-                    onCommentClick = {}
+                    onLikeClick = {viewModel.toggleLike(post) },
+                    onCommentClick = {},
+                    onSaveClick = {viewModel.toggleSavePost(post)}
                 )
                 Divider()
             }

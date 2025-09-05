@@ -12,10 +12,14 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -33,6 +37,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.example.ofmen.R
+import com.example.ofmen.viewmodel.FeedViewModel
 import com.example.ofmen.viewmodel.Post
 import com.example.ofmen.viewmodel.YourPostsViewModel
 import com.google.android.exoplayer2.ExoPlayer
@@ -45,7 +50,6 @@ import com.google.firebase.auth.FirebaseAuth
 @Composable
 fun YourPostsScreen(viewModel: YourPostsViewModel = viewModel(), navController: NavHostController) {
     val posts by viewModel.posts.collectAsState()
-
     LaunchedEffect(Unit) {
         viewModel.loadPosts()
     }
@@ -68,7 +72,8 @@ fun YourPostsScreen(viewModel: YourPostsViewModel = viewModel(), navController: 
 fun YourPostCard(
     post: Post,
     viewModel: YourPostsViewModel = viewModel(),
-    onCommentClick: () -> Unit
+    onCommentClick: () -> Unit,
+
 ) {
     Card(
         shape = RoundedCornerShape(12.dp),
@@ -117,6 +122,10 @@ fun YourPostCard(
                         text = timeAgo(post.createdAt),
                         style = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
                     )
+                }
+                Spacer(modifier = Modifier.weight(1f))
+                IconButton(onClick = {  }) {
+                    Icon(Icons.Default.MoreVert, contentDescription = "More")
                 }
             }
 
@@ -296,6 +305,19 @@ fun YourPostCard(
                     }
                     Text("${post.commentsCount} comments", style = MaterialTheme.typography.bodySmall)
                 }
+                IconButton(onClick = {  }) {
+                    Icon(
+                        imageVector = Icons.Default.Star,
+                        contentDescription = "Save Post"
+                    )
+                }
+                IconButton(onClick = {  }) {
+                    Icon(
+                        imageVector = Icons.Default.Share,
+                        contentDescription = "Share Post"
+                    )
+                }
+
             }
 
             Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))

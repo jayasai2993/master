@@ -72,7 +72,8 @@ fun HomeScreen(viewModel: FeedViewModel = viewModel(), navController: NavHostCon
                 isPlaying = currentPlayingPostId == post.id,
                 onVisible = { currentPlayingPostId = post.id },
                 onLikeClick = { viewModel.toggleLike(post) },
-                onCommentClick = { navController.navigate("comments/${post.id}") }
+                onCommentClick = { navController.navigate("comments/${post.id}") },
+                onSaveClick = { viewModel.toggleSavePost(post) }
             )
         }
     }
@@ -115,7 +116,8 @@ fun PostCard(
     isPlaying: Boolean,
     onVisible: () -> Unit,
     onLikeClick: () -> Unit,
-    onCommentClick: () -> Unit
+    onCommentClick: () -> Unit,
+    onSaveClick: () -> Unit
 ) {
     Card(
         shape = RoundedCornerShape(12.dp),
@@ -164,6 +166,10 @@ fun PostCard(
                         text = timeAgo(post.createdAt),
                         style = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
                     )
+                }
+                Spacer(modifier = Modifier.weight(1f))
+                IconButton(onClick = {  }) {
+                    Icon(Icons.Default.MoreVert, contentDescription = "More")
                 }
             }
 
@@ -341,6 +347,18 @@ fun PostCard(
                         Text(
                             "${post.commentsCount} comments",
                             style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+                    IconButton(onClick = { onSaveClick() }) {
+                        Icon(
+                            imageVector = if (post.isSaved) Icons.Default.Star else Icons.Default.Add,
+                            contentDescription = "Save Post"
+                        )
+                    }
+                    IconButton(onClick = {  }) {
+                        Icon(
+                            imageVector = Icons.Default.Share,
+                            contentDescription = "Share Post"
                         )
                     }
                 }
