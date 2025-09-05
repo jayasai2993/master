@@ -30,6 +30,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.example.ofmen.R
 import com.example.ofmen.viewmodel.Post
@@ -42,7 +43,7 @@ import com.google.android.exoplayer2.video.VideoSize
 import com.google.firebase.auth.FirebaseAuth
 
 @Composable
-fun YourPostsScreen(viewModel: YourPostsViewModel = viewModel()) {
+fun YourPostsScreen(viewModel: YourPostsViewModel = viewModel(), navController: NavHostController) {
     val posts by viewModel.posts.collectAsState()
 
     LaunchedEffect(Unit) {
@@ -55,7 +56,8 @@ fun YourPostsScreen(viewModel: YourPostsViewModel = viewModel()) {
     ) {
         items(posts) { post ->
             YourPostCard(
-                post = post
+                post = post,
+                onCommentClick = { navController.navigate("comments/${post.id}") }
             )
         }
     }
@@ -65,7 +67,8 @@ fun YourPostsScreen(viewModel: YourPostsViewModel = viewModel()) {
 @Composable
 fun YourPostCard(
     post: Post,
-    viewModel: YourPostsViewModel = viewModel()
+    viewModel: YourPostsViewModel = viewModel(),
+    onCommentClick: () -> Unit
 ) {
     Card(
         shape = RoundedCornerShape(12.dp),
@@ -282,7 +285,7 @@ fun YourPostCard(
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     IconButton(
-                        onClick = {},
+                        onClick = { onCommentClick() },
                         modifier = Modifier.size(28.dp)
                     ) {
                         Icon(

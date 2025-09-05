@@ -5,6 +5,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -13,6 +14,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.ofmen.DataStoreManager
+import com.example.ofmen.viewmodel.CommentViewModel
 import com.example.ofmen.viewmodel.FeedViewModel
 import com.example.ofmen.viewmodel.ProfileViewModel
 import com.example.ofmen.viewmodel.YourPostsViewModel
@@ -45,7 +47,10 @@ fun MainScreen(){
                 modifier = Modifier.padding(innerPadding)
             ) {
                 composable("home") { val feedViewModel: FeedViewModel = viewModel()
-                    HomeScreen(viewModel = feedViewModel) }
+                    HomeScreen(
+                        viewModel = feedViewModel,
+                        navController
+                    ) }
                 composable("community") { CommunityScreen(navController) }
                 composable("post") { NewPostScreen(cloudName = "dvyfzlzzq", uploadPreset = "unsigned_posts_preset",navController) }
                 composable("tasks") { TaskScreen() }
@@ -55,7 +60,25 @@ fun MainScreen(){
                 composable("signup") { SignupScreen(navController) }
                 composable("rules") { RulesScreen(navController) }
                 composable("YourPosts") { val yourPostsViewModel: YourPostsViewModel = viewModel()
-                    YourPostsScreen(viewModel = yourPostsViewModel) }
+                    YourPostsScreen(viewModel = yourPostsViewModel, navController) }
+                composable("comments/{postId}") { backStackEntry ->
+                    val postId = backStackEntry.arguments?.getString("postId") ?: return@composable
+
+                    // ✅ Remember the parent entry (the screen that owns FeedViewModel)
+                    val parentEntry = remember(backStackEntry) {
+                        navController.getBackStackEntry("home")
+                    }
+
+                    val feedViewModel: FeedViewModel = viewModel(parentEntry)
+                    val commentViewModel: CommentViewModel = viewModel()
+
+                    val post = feedViewModel.feedPosts.value.find { it.id == postId } ?: return@composable
+
+                    DetailsScreen(
+                        post = post,
+                        commentViewModel = commentViewModel
+                    )
+                }
             }
         }
 }
