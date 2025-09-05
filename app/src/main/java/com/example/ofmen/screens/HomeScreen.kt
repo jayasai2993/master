@@ -53,7 +53,7 @@ import kotlinx.coroutines.tasks.await
 val bebasNeue = FontFamily(Font(R.font.bebas_neue_regular))
 
 @Composable
-fun HomeScreen(viewModel: FeedViewModel = viewModel()) {
+fun HomeScreen(viewModel: FeedViewModel = viewModel(), navController: NavHostController) {
     val posts by viewModel.feedPosts.collectAsState()
     var currentPlayingPostId by remember { mutableStateOf<String?>(null) }
 
@@ -72,7 +72,7 @@ fun HomeScreen(viewModel: FeedViewModel = viewModel()) {
                 isPlaying = currentPlayingPostId == post.id,
                 onVisible = { currentPlayingPostId = post.id },
                 onLikeClick = { viewModel.toggleLike(post) },
-                onCommentClick = { viewModel.addComment(post.id, "Nice!") }
+                onCommentClick = { navController.navigate("comments/${post.id}") }
             )
         }
     }
