@@ -97,7 +97,7 @@ fun ProfileScreen(
                 fontSize = 28.sp,
                 fontFamily = bebasNeue,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onBackground,
+                color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.align(Alignment.CenterHorizontally)
             )
 

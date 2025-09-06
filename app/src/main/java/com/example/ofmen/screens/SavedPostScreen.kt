@@ -36,7 +36,8 @@ fun SavedPostsScreen(viewModel: FeedViewModel,navController: NavHostController) 
                 onVisible = {},
                 onLikeClick = { viewModel.toggleLike(post) },
                 onCommentClick = { navController.navigate("comments/${post.id}") },
-                onSaveClick = { viewModel.toggleSavePost(post) }
+                onSaveClick = { viewModel.toggleSavePost(post) },
+                navController
             )
         }
     }

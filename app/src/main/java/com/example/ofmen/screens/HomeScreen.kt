@@ -73,7 +73,8 @@ fun HomeScreen(viewModel: FeedViewModel = viewModel(), navController: NavHostCon
                 onVisible = { currentPlayingPostId = post.id },
                 onLikeClick = { viewModel.toggleLike(post) },
                 onCommentClick = { navController.navigate("comments/${post.id}") },
-                onSaveClick = { viewModel.toggleSavePost(post) }
+                onSaveClick = { viewModel.toggleSavePost(post) },
+                navController = navController
             )
         }
     }
@@ -90,7 +91,7 @@ fun HomeTopBar() {
                     fontFamily = bebasNeue,
                     fontSize = 22.sp,
                     fontWeight = FontWeight.ExtraBold,
-                    color = MaterialTheme.colorScheme.onBackground
+                    color = MaterialTheme.colorScheme.primary
                 )
             )
         },
@@ -117,13 +118,14 @@ fun PostCard(
     onVisible: () -> Unit,
     onLikeClick: () -> Unit,
     onCommentClick: () -> Unit,
-    onSaveClick: () -> Unit
+    onSaveClick: () -> Unit,
+    navController: NavHostController
 ) {
     Card(
         shape = RoundedCornerShape(12.dp),
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 12.dp, vertical = 8.dp),
+            .padding(horizontal = 9.dp, vertical = 6.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
@@ -142,13 +144,19 @@ fun PostCard(
                         modifier = Modifier
                             .size(42.dp)
                             .clip(CircleShape)
+                            .clickable {
+                                navController.navigate("userProfile/${post.userId}")
+                            }
                     )
                 } else {
                     Box(
                         modifier = Modifier
                             .size(42.dp)
                             .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.15f)),
+                            .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.15f))
+                            .clickable {
+                                navController.navigate("userProfile/${post.userId}")
+                            },
                         contentAlignment = Alignment.Center
                     ) {
                         Text(post.username.firstOrNull()?.toString() ?: "U")
@@ -157,7 +165,11 @@ fun PostCard(
 
                 Spacer(modifier = Modifier.width(10.dp))
 
-                Column {
+                Column(
+                    modifier = Modifier.clickable {
+                        navController.navigate("userProfile/${post.userId}")
+                    }
+                ) {
                     Text(
                         text = post.username,
                         style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold)

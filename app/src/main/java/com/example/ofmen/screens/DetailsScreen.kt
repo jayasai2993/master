@@ -19,6 +19,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
 import com.example.ofmen.viewmodel.CommentViewModel
@@ -31,7 +32,8 @@ import kotlinx.coroutines.tasks.await
 @Composable
 fun DetailsScreen(
     post: FeedPost,
-    commentViewModel: CommentViewModel = viewModel()
+    commentViewModel: CommentViewModel = viewModel(),
+    navController: NavHostController
 ) {
     val comments by commentViewModel.comments.collectAsState()
     val viewModel: FeedViewModel = viewModel()
@@ -56,78 +58,32 @@ fun DetailsScreen(
         }
     }
 
-    Scaffold(
-        bottomBar = {
-            Divider()
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                if (profileImageUrl != null) {
-                    Image(
-                        painter = rememberAsyncImagePainter(model = profileImageUrl),
-                        contentDescription = "Profile",
-                        modifier = Modifier
-                            .size(32.dp)
-                            .clip(CircleShape)
-                    )
-                } else {
-                    Box(
-                        modifier = Modifier
-                            .size(32.dp)
-                            .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.15f)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text("U")
-                    }
-                }
-
-                Spacer(modifier = Modifier.width(8.dp))
-
-                TextField(
-                    value = text,
-                    onValueChange = { text = it },
-                    modifier = Modifier.weight(1f),
-                    placeholder = { Text("Add a comment...") },
-                    singleLine = true
-                )
-
-                TextButton(
-                    onClick = {
-                        if (text.isNotBlank()) {
-                            commentViewModel.addComment(post.id, text)
-                            text = ""
-                        }
-                    }
-                ) {
-                    Text("Post")
-                }
-            }
-        }
-    ) { innerPadding ->
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+    ) {
+        // 🔹 Main Content
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding) // respect bottomBar
-                .background(MaterialTheme.colorScheme.background)
+                .padding(bottom = 64.dp) // leave space for bottom input
         ) {
-            // 🔹 Show Post first
+            // Post
             item {
                 PostCard(
                     post = post,
                     isPlaying = false,
                     onVisible = {},
-                    onLikeClick = {viewModel.toggleLike(post) },
+                    onLikeClick = { viewModel.toggleLike(post) },
                     onCommentClick = {},
-                    onSaveClick = {viewModel.toggleSavePost(post)}
+                    onSaveClick = { viewModel.toggleSavePost(post) },
+                    navController = navController
                 )
                 Divider()
             }
 
-            // 🔹 Comments
+            // Comments
             items(comments, key = { it.id }) { comment ->
                 var isEditing by remember { mutableStateOf(false) }
                 var editText by remember { mutableStateOf(comment.text) }
@@ -222,8 +178,65 @@ fun DetailsScreen(
                 }
             }
         }
+
+        // 🔹 Fixed Bottom Comment Input
+        Column(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .background(MaterialTheme.colorScheme.surface)
+        ) {
+            Divider()
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                if (profileImageUrl != null) {
+                    Image(
+                        painter = rememberAsyncImagePainter(model = profileImageUrl),
+                        contentDescription = "Profile",
+                        modifier = Modifier
+                            .size(32.dp)
+                            .clip(CircleShape)
+                    )
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .size(32.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.15f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text("U")
+                    }
+                }
+
+                Spacer(modifier = Modifier.width(8.dp))
+
+                TextField(
+                    value = text,
+                    onValueChange = { text = it },
+                    modifier = Modifier.weight(1f),
+                    placeholder = { Text("Add a comment...") },
+                    singleLine = true
+                )
+
+                TextButton(
+                    onClick = {
+                        if (text.isNotBlank()) {
+                            commentViewModel.addComment(post.id, text)
+                            text = ""
+                        }
+                    }
+                ) {
+                    Text("Post")
+                }
+            }
+        }
     }
 }
+
 
 
 @Composable
