@@ -29,4 +29,8 @@ class YourPostRepository(
     suspend fun deletePost(postId: String) {
         postsCollection.document(postId).delete().await()
     }
+    // ✅ New: Get posts for any user
+    suspend fun getPostsByUser(userId: String): QuerySnapshot {
+        return postsCollection.whereEqualTo("userId", userId).get().await()
+    }
 }

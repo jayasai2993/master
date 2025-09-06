@@ -92,7 +92,7 @@ fun SplashScreen() {
                     fontWeight = FontWeight.ExtraBold,
                     letterSpacing = 4.sp
                 ),
-                color = MaterialTheme.colorScheme.onBackground,
+                color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier
                     .scale(scale.value)
                     .alpha(alpha.value)

@@ -54,7 +54,9 @@ fun MainScreen(){
                 composable("community") { CommunityScreen(navController) }
                 composable("post") { NewPostScreen(cloudName = "dvyfzlzzq", uploadPreset = "unsigned_posts_preset",navController) }
                 composable("tasks") { TaskScreen() }
-                composable("profile") { val profileViewModel: ProfileViewModel = viewModel()
+                composable("profile"){val yourPostsViewModel: YourPostsViewModel = viewModel()
+                    YourProfileScreen(navController, viewModel = yourPostsViewModel) }
+                composable("editprofile") { val profileViewModel: ProfileViewModel = viewModel()
                     ProfileScreen( dataStoreManager, navController, viewModel = profileViewModel) }
                 composable("login") { LoginScreen(navController, dataStoreManager) }
                 composable("signup") { SignupScreen(navController) }
@@ -76,9 +78,15 @@ fun MainScreen(){
 
                     DetailsScreen(
                         post = post,
-                        commentViewModel = commentViewModel
+                        commentViewModel = commentViewModel,
+                        navController
                     )
                 }
+                composable("userProfile/{userId}") { backStackEntry ->
+                    val userId = backStackEntry.arguments?.getString("userId") ?: ""
+                    UserProfileScreen(userId = userId, navController = navController)
+                }
+
                 composable("SavedPosts") { val feedViewModel: FeedViewModel = viewModel()
                     SavedPostsScreen(viewModel = feedViewModel, navController) }
             }

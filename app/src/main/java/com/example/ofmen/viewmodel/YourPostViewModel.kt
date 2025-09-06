@@ -55,7 +55,17 @@ class YourPostsViewModel(
             }
         }
     }
-
+    // ✅ New: load posts for any user
+    fun loadPostsForUser(userId: String) {
+        viewModelScope.launch {
+            try {
+                val snapshot = repository.getPostsByUser(userId)
+                _posts.value = snapshot.toPostsList()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
     fun updatePost(postId: String, title: String, description: String) {
         viewModelScope.launch {
             repository.updatePost(postId, title, description)
@@ -67,6 +77,24 @@ class YourPostsViewModel(
         viewModelScope.launch {
             repository.deletePost(postId)
             loadPosts() // refresh
+        }
+    }
+    private fun com.google.firebase.firestore.QuerySnapshot.toPostsList(): List<Post> {
+        return documents.map { doc ->
+            Post(
+                id = doc.id,
+                title = doc.getString("title") ?: "",
+                description = doc.getString("description") ?: "",
+                mediaUrl = doc.getString("mediaUrl") ?: "",
+                mediaType = doc.getString("mediaType") ?: "image",
+                username = doc.getString("username") ?: "Unknown",
+                profileImageUrl = doc.getString("profileImageUrl") ?: "",
+                createdAt = doc.getTimestamp("createdAt")?.toDate()?.time ?: 0L,
+                likes = doc.get("likes") as? List<String> ?: emptyList(),
+                likesCount = doc.getLong("likesCount")?.toInt() ?: 0,
+                commentsCount = doc.getLong("commentsCount")?.toInt() ?: 0,
+                userId = doc.getString("userId") ?: ""
+            )
         }
     }
 }
