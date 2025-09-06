@@ -2,6 +2,8 @@ package com.example.ofmen.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -15,16 +17,15 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.example.ofmen.R
+import com.example.ofmen.viewmodel.FeedViewModel
 import com.example.ofmen.viewmodel.ProfileViewModel
-import com.example.ofmen.viewmodel.YourPostsViewModel
 import com.example.ofmen.viewmodel.YourProfileViewModel
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
 
 @Composable
 fun YourProfileScreen(
     navController: NavHostController,
-    viewModel: YourPostsViewModel = viewModel()
+    viewModel: FeedViewModel = viewModel()
 ) {
     val profileViewModel: ProfileViewModel = viewModel()
     val yourProfileViewModel: YourProfileViewModel = viewModel()
@@ -32,21 +33,22 @@ fun YourProfileScreen(
     val profile by profileViewModel.profileState.collectAsState()
     val auth = FirebaseAuth.getInstance()
     val userId = auth.currentUser?.uid ?: ""
+    val posts by viewModel.posts.collectAsState()
 
     LaunchedEffect(userId) {
         profileViewModel.loadUserProfile()
         yourProfileViewModel.loadUserProfile(userId)
-        viewModel.loadPosts()
+        viewModel.loadPostsForUser(userId)
     }
 
-    Scaffold { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
-                .padding(padding)
-        ) {
-            // ---- Profile Info Section ----
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+            .padding(10.dp)
+    ) {
+        // ---- Profile Info Section ----
+        item {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -64,7 +66,11 @@ fun YourProfileScreen(
                 Column {
                     Text(profile.username, fontWeight = FontWeight.Bold, fontSize = 20.sp)
                     Spacer(modifier = Modifier.height(4.dp))
-                    Text(profile.bio, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(
+                        profile.bio,
+                        fontSize = 14.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
             }
 
@@ -80,7 +86,7 @@ fun YourProfileScreen(
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            // ---- Buttons (for your own profile: Edit + Logout) ----
+            // ---- Buttons ----
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -92,12 +98,22 @@ fun YourProfileScreen(
                     modifier = Modifier.weight(1f)
                 ) { Text("Edit Profile") }
             }
+        }
 
-            Spacer(modifier = Modifier.height(16.dp))
+        item { Spacer(modifier = Modifier.height(16.dp)) }
+        item { Divider() }
 
-            Divider()
-
-            YourPostsScreen(viewModel, navController)
+        // ---- Posts ----
+        items(posts) { post ->
+            PostCard(
+                post = post,
+                isPlaying = false,
+                onVisible = {},
+                onLikeClick = { viewModel.toggleLike(post) },
+                onCommentClick = { navController.navigate("comments/${post.id}") },
+                onSaveClick = { viewModel.toggleSavePost(post) },
+                navController = navController
+            )
         }
     }
 }

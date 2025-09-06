@@ -54,8 +54,8 @@ fun MainScreen(){
                 composable("community") { CommunityScreen(navController) }
                 composable("post") { NewPostScreen(cloudName = "dvyfzlzzq", uploadPreset = "unsigned_posts_preset",navController) }
                 composable("tasks") { TaskScreen() }
-                composable("profile"){val yourPostsViewModel: YourPostsViewModel = viewModel()
-                    YourProfileScreen(navController, viewModel = yourPostsViewModel) }
+                composable("profile"){
+                    YourProfileScreen(navController)}
                 composable("editprofile") { val profileViewModel: ProfileViewModel = viewModel()
                     ProfileScreen( dataStoreManager, navController, viewModel = profileViewModel) }
                 composable("login") { LoginScreen(navController, dataStoreManager) }

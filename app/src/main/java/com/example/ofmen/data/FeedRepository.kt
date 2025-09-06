@@ -1,9 +1,8 @@
 package com.example.ofmen.data
 
-
-
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
+import com.google.firebase.firestore.QuerySnapshot
 import kotlinx.coroutines.tasks.await
 
 class FeedRepository(
@@ -58,7 +57,10 @@ class FeedRepository(
             userSavedRef.delete().await()
         }
     }
-
+    // ✅ New: Get posts for any user
+    suspend fun getPostsByUser(userId: String): QuerySnapshot {
+        return postsCollection.whereEqualTo("userId", userId).get().await()
+    }
     suspend fun getSavedPosts(userId: String) =
         db.collection("users").document(userId).collection("savedPosts")
             .orderBy("savedAt", Query.Direction.DESCENDING)

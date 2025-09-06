@@ -1,6 +1,5 @@
 package com.example.ofmen.viewmodel
 
-
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.ofmen.data.FeedRepository
@@ -36,17 +35,18 @@ class FeedViewModel(
     private val _savedPosts = MutableStateFlow<List<FeedPost>>(emptyList())
     val savedPosts: StateFlow<List<FeedPost>> = _savedPosts
 
+    // ✅ Use only FeedPost for posts, remove Post type
+    private val _posts = MutableStateFlow<List<FeedPost>>(emptyList())
+    val posts: StateFlow<List<FeedPost>> = _posts
+
     fun toggleSavePost(post: FeedPost) {
         viewModelScope.launch {
             val currentUserId = auth.currentUser?.uid ?: return@launch
             repository.toggleSavePost(post.id, currentUserId, !post.isSaved)
-
-            // Refresh both feeds
             loadFeed()
             loadSavedPosts()
         }
     }
-
 
     fun loadSavedPosts() {
         viewModelScope.launch {
@@ -78,14 +78,21 @@ class FeedViewModel(
         }
     }
 
+    fun loadPostsForUser(userId: String) {
+        viewModelScope.launch {
+            try {
+                val snapshot = repository.getPostsByUser(userId)
+                _posts.value = snapshot.toFeedPostList()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
 
     fun loadFeed() {
         viewModelScope.launch {
             val currentUserId = auth.currentUser?.uid ?: return@launch
-
-            // Fetch all posts
             val snapshot = repository.getAllPosts()
-            // Fetch saved posts for current user
             val savedSnapshot = repository.getSavedPosts(currentUserId)
             val savedIds = savedSnapshot.documents.mapNotNull { it.getString("postId") }.toSet()
 
@@ -103,13 +110,12 @@ class FeedViewModel(
                     likes = doc.get("likes") as? List<String> ?: emptyList(),
                     likesCount = doc.getLong("likesCount")?.toInt() ?: 0,
                     commentsCount = doc.getLong("commentsCount")?.toInt() ?: 0,
-                    isSaved = savedIds.contains(doc.id)  // 🔥 check if saved
+                    isSaved = savedIds.contains(doc.id)
                 )
             }
             _feedPosts.value = posts
         }
     }
-
 
     fun toggleLike(post: FeedPost) {
         viewModelScope.launch {
@@ -125,6 +131,27 @@ class FeedViewModel(
             val user = auth.currentUser ?: return@launch
             repository.addComment(postId, user.uid, user.displayName ?: "Anon", text)
             loadFeed()
+        }
+    }
+
+    // Extension function to convert QuerySnapshot to List<FeedPost>
+    private fun com.google.firebase.firestore.QuerySnapshot.toFeedPostList(): List<FeedPost> {
+        return documents.map { doc ->
+            FeedPost(
+                id = doc.id,
+                title = doc.getString("title") ?: "",
+                description = doc.getString("description") ?: "",
+                mediaUrl = doc.getString("mediaUrl") ?: "",
+                mediaType = doc.getString("mediaType") ?: "image",
+                username = doc.getString("username") ?: "Unknown",
+                profileImageUrl = doc.getString("profileImageUrl") ?: "",
+                createdAt = doc.getTimestamp("createdAt")?.toDate()?.time ?: 0L,
+                likes = doc.get("likes") as? List<String> ?: emptyList(),
+                likesCount = doc.getLong("likesCount")?.toInt() ?: 0,
+                commentsCount = doc.getLong("commentsCount")?.toInt() ?: 0,
+                userId = doc.getString("userId") ?: "",
+                isSaved = false
+            )
         }
     }
 }
